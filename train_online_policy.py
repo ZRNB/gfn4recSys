@@ -26,13 +26,12 @@ if __name__ == '__main__':
     init_parser.add_argument('--buffer_class', type=str, default='BaseBuffer', help='Buffer class')
     
     initial_args, _ = init_parser.parse_known_args()
-    print(initial_args)
     
     envClass = eval('{0}.{0}'.format(initial_args.env_class))
     policyClass = eval('{0}.{0}'.format(initial_args.policy_class))
     agentClass = eval('{0}.{0}'.format(initial_args.agent_class))
     bufferClass = eval('{0}.{0}'.format(initial_args.buffer_class))
-    
+
     setproctitle.setproctitle(f"{initial_args.policy_class}@{initial_args.env_class[:6]} Online")
     
     # control args

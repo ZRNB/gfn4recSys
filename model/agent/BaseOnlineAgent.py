@@ -87,8 +87,8 @@ class BaseOnlineAgent():
             self.immediate_response_weight = torch.FloatTensor(self.env.response_weights).to(self.device)
 
         self.exploration_scheduler = utils.LinearScheduler(int(sum(args.n_iter) * args.elbow_greedy), 
-                                                           args.final_greedy_epsilon, 
-                                                           initial_p=args.initial_greedy_epsilon)
+                                                        args.final_greedy_epsilon, 
+                                                        initial_p=args.initial_greedy_epsilon)
         
         self.actor = actor
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=args.actor_lr, 
@@ -123,7 +123,7 @@ class BaseOnlineAgent():
             do_buffer_update = True
             do_explore = True
             observation = self.run_episode_step(i, self.exploration_scheduler.value(i), observation, 
-                                                do_buffer_update, do_explore)
+                                                do_buffer_update, do_explore)                       
             # training step
             if i % self.train_every_n_step == 0:
                 self.step_train()
@@ -158,7 +158,7 @@ class BaseOnlineAgent():
         # training records
         self.training_history = {}
         self.eval_history = {'avg_reward': [], 'max_reward': [], 'reward_variance': [], 
-                             'coverage': [], 'intra_slate_diversity': []}
+                            'coverage': [], 'intra_slate_diversity': []}
         self.eval_history.update({f'{resp}_rate': [] for resp in self.env.response_types})
         self.initialize_training_history()
         
@@ -194,14 +194,24 @@ class BaseOnlineAgent():
             candidate_info = self.env.get_candidate_info(observation)
             # sample action
             input_dict = {'observation': observation, 
-                          'candidates': candidate_info, 
-                          'action_dim': self.env.action_dim,
-                          'action': None, 'response': None,
-                          'epsilon': epsilon, 'do_explore': do_explore, 'is_train': False}
+                        'candidates': candidate_info, 
+                        'action_dim': self.env.action_dim,
+                        'action': None, 
+                        'response': None,
+                        'epsilon': epsilon,
+                        'do_explore': do_explore, 
+                        'is_train': False}
             policy_output = self.actor(input_dict)
+            '''
+            self.actor(input_dict)-->
+            SlateGFN_TB(input_dict)-->
+            BaseOnlinePolicy(input_dict)-->
+            BaseOnlinePolicy.generate_action(input_dict)-->
+            SlateGFN_TB.generate_action(self, user_state, feed_dict)
+            '''
             # apply action on environment
             # Note: action must be indices on env.candidate_iids
-            action_dict = {'action': policy_output['action']}   
+            action_dict = {'action': policy_output['action']}
             new_observation, user_feedback, updated_observation = self.env.step(action_dict)
             # calculate reward
             user_feedback['immediate_response_weight'] = self.immediate_response_weight
@@ -271,11 +281,11 @@ class BaseOnlineAgent():
         observation['batch_size'] = self.episode_batch_size
         candidate_info = self.env.get_candidate_info(observation)
         input_dict = {'observation': observation, 
-                      'candidates': candidate_info, 
-                      'action_dim': self.env.action_dim,
-                      'action': target_output['action'], 
-                      'response': target_response,
-                      'epsilon': 0, 'do_explore': False, 'is_train': True}
+                    'candidates': candidate_info, 
+                    'action_dim': self.env.action_dim,
+                    'action': target_output['action'], 
+                    'response': target_response,
+                    'epsilon': 0, 'do_explore': False, 'is_train': True}
         policy_output = self.actor(input_dict)
 
         # loss
@@ -320,10 +330,10 @@ class BaseOnlineAgent():
             candidate_info = self.env.get_candidate_info(observation)
             # sample action
             input_dict = {'observation': observation, 
-                          'candidates': candidate_info, 
-                          'action_dim': self.env.action_dim,
-                          'action': None, 'response': None,
-                          'epsilon': 0, 'do_explore': False, 'is_train': False}
+                        'candidates': candidate_info, 
+                        'action_dim': self.env.action_dim,
+                        'action': None, 'response': None,
+                        'epsilon': 0, 'do_explore': False, 'is_train': False}
             policy_output = self.actor(input_dict)
             # apply action on environment
             # Note: action must be indices on env.candidate_iids

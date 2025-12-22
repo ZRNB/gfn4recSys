@@ -21,13 +21,13 @@ for LR in 0.0001 # 0.00001 0.001
 do
     for REG in 0.01 0.1 0
     do
-        python train_multibehavior.py\
+        python ../train_multibehavior.py\
             --epoch 10\
             --seed 19\
             --lr ${LR}\
             --batch_size 128\
             --val_batch_size 128\
-            --cuda 0\
+            --cuda 4\
             --reader KRMBSeqReader\
             --train_file ${train_path}\
             --user_meta_file ${user_meta_path}\

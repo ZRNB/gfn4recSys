@@ -86,8 +86,10 @@ class KRUserEnvironment_ListRec(KRUserEnvironment_FiniteImmediate):
         - self.temper
         '''
         BS = self.episode_batch_size
+        # self.iter = iter(DataLoader(self.reader, batch_size = BS, shuffle = True, 
+        #                                   pin_memory = True, num_workers = 8))
         self.iter = iter(DataLoader(self.reader, batch_size = BS, shuffle = True, 
-                                          pin_memory = True, num_workers = 8))
+                                          pin_memory = False, num_workers = 0))
         initial_sample = next(self.iter)
         self.current_observation = self.get_observation_from_batch(initial_sample)
         self.temper = torch.ones(self.episode_batch_size).to(self.device) * self.initial_temper
@@ -107,8 +109,7 @@ class KRUserEnvironment_ListRec(KRUserEnvironment_FiniteImmediate):
         with torch.no_grad():
             response_out = self.get_response(step_dict)
             # (B, slate_size, n_feedback)
-            response = response_out['immediate_response']
-
+            response = response_out['immediate_response'] #immediate response:  torch.Size([128, 6, 7])
             # get leave signal
             # (B,), 0-1 vector
             done_mask = self.get_leave_signal(response)
@@ -131,7 +132,9 @@ class KRUserEnvironment_ListRec(KRUserEnvironment_FiniteImmediate):
                     new_sample_flag = True
                 if new_sample_flag:
                     self.iter = iter(DataLoader(self.reader, batch_size = done_mask.shape[0], shuffle = True, 
-                                                pin_memory = True, num_workers = 8))
+                                                pin_memory = False, num_workers = 0))
+                    # self.iter = iter(DataLoader(self.reader, batch_size = done_mask.shape[0], shuffle = True, 
+                    #                             pin_memory = True, num_workers = ))
                     sample_info = next(self.iter)
                 new_observation = self.get_observation_from_batch(sample_info)
                 self.current_observation = new_observation

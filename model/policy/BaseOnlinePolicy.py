@@ -54,8 +54,10 @@ class BaseOnlinePolicy(BaseModel):
         self.bce_loss = nn.BCEWithLogitsLoss(reduction = 'none')
 
 
-    def get_forward(self, feed_dict: dict):
+    def get_forward(self, feed_dict: dict): 
         '''
+        nn.Module.__call__ → _wrapped_call_impl → _call_impl → forward -> get_forward
+        
         @input:
         - feed_dict: {
             'observation':{

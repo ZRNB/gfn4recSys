@@ -3,7 +3,7 @@ mkdir -p output
 mkdir -p output/kuairand_1k/
 mkdir -p output/kuairand_1k/agent
 
-env_path="output/kuairand_1k/env/"
+env_path="../output/kuairand_1k/env/"
 env_model_path=${env_path}log/user_KRMBUserResponse_MaxOut_lr0.0001_reg0.01.model.log
 output_path="output/kuairand_1k/agent/"
 
@@ -40,15 +40,15 @@ for REG in 0 # 0.00001 # 0.001 0.0001
 do
     for ACTOR_LR in 0.0001 # 0.0003 0.00003
     do
-        for Z in 1.0 0.5 1.5 0.1
+        for Z in 1.0  0.5 1.5 0.1 
         do
-            for SEED in 11 13 17 19 23
+            for SEED in  11 13 17 19 23
             do
                 file_key=${AGENT_CLASS}_${POLICY_CLASS}_R${R_SMOOTH}_F${FWD_OFFSET}_Z${Z}_actor${ACTOR_LR}_niter${N_ITER}_reg${REG}_ep${INITEP}_bs${BS}_epbs${EP_BS}_seed${SEED}
 
                 mkdir -p ${output_path}/${file_key}/
 
-                python train_online_policy.py\
+                python ../train_online_policy.py\
                     --seed ${SEED}\
                     --cuda 0\
                     --env_class ${ENV_CLASS}\
