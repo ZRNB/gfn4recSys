@@ -54,6 +54,8 @@ class TeacherStudentOnlineAgent():
                             help='training batch size')
         parser.add_argument('--actor_lr', type=float, default=1e-4, 
                             help='learning rate for actor')
+        parser.add_argument('--actor_lr_teacher', type=float, default=1e-4, 
+                            help='learning rate for teacher actor')
         parser.add_argument('--actor_decay', type=float, default=1e-4, 
                             help='regularization factor for actor learning')
         parser.add_argument('--explore_rate', type=float, default=1, 
@@ -91,8 +93,24 @@ class TeacherStudentOnlineAgent():
                                                         initial_p=args.initial_greedy_epsilon)
         
         self.actor = actor
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=args.actor_lr, 
-                                                weight_decay=args.actor_decay)
+        # self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=args.actor_lr, 
+        #                                         weight_decay=args.actor_decay)
+        self.params_list_student = [
+            {"params": self.actor.pForwardEncoder.parameters()},
+            {"params": self.actor.pForwardNorm.parameters()},
+            {"params": [self.actor.logFlowZero]},
+            {"params": [self.actor.gfn_Z]}
+        ]
+
+        self.params_list_teacher = [
+            {"params": self.actor.teacher_pForwardEncoder.parameters()},
+            {"params": self.actor.teacher_pForwardNorm.parameters()},
+            {"params": [self.actor.teacher_logFlowZero]},
+            {"params": [self.actor.gfn_Z_teacher]}
+        ]
+
+        self.actor_optimizer = torch.optim.Adam(self.params_list_student, lr=args.actor_lr)
+        self.actor_optimizer_teacher = torch.optim.Adam(self.params_list_teacher, lr=args.actor_lr_teacher)
         
         self.buffer = buffer
         

@@ -48,16 +48,13 @@ class TeacherStudent_TB(BaseOnlinePolicy):
                     - l2_coef
         '''
         parser = BaseOnlinePolicy.parse_model_args(parser) 
-        parser.add_argument('--gfn_forward_hidden_dims', type=int, nargs="+", default=[128], 
-                            help='hidden dimensions of state_slate encoding layers')
-        parser.add_argument('--gfn_flowzero_hidden_dims', type=int, nargs="+", default=[128], 
-                            help='hidden dimensions of F0')
-        parser.add_argument('--gfn_forward_offset', type=float, default=1.0, 
-                            help='smooth offset of forward logp of TB loss')
-        parser.add_argument('--gfn_reward_smooth', type=float, default=1.0, 
-                            help='reward smooth offset in the backward part of TB loss')
-        parser.add_argument('--gfn_Z', type=float, default=0., 
-                            help='average reward offset')
+        parser.add_argument('--gfn_forward_hidden_dims', type=int, nargs="+", default=[128], help='hidden dimensions of state_slate encoding layers')
+        parser.add_argument('--gfn_flowzero_hidden_dims', type=int, nargs="+", default=[128], help='hidden dimensions of F0')
+        parser.add_argument('--gfn_forward_offset', type=float, default=1.0, help='smooth offset of forward logp of TB loss')
+        parser.add_argument('--gfn_reward_smooth', type=float, default=1.0, help='reward smooth offset in the backward part of TB loss')
+        parser.add_argument('--gfn_Z', type=float, default=0., help='average reward offset')
+        parser.add_argument('--gfn_Z_teacher', type=float, default=0.)
+        parser.add_argument('--beta_teacher', type=float, default=1.0)
         
         return parser
         
@@ -70,11 +67,12 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         self.gfn_forward_offset = args.gfn_forward_offset
         self.gfn_reward_smooth = args.gfn_reward_smooth
         self.gfn_Z = args.gfn_Z
-
+        self.gfn_Z_teacher = args.gfn_Z_teacher
+        self.beta_teracher = args.beta_teacher
         # teacher initialization
         
         super().__init__(args, reader_stats, device)
-        self.display_name = "GFN"
+        self.display_name = "GFN_TS"
         
     def to(self, device):
         new_self = super(TeacherStudent_TB, self).to(device)
@@ -90,8 +88,15 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         self.pForwardNorm = nn.LayerNorm(self.enc_dim)
         # flow
         self.logFlowZero = DNN(self.state_dim, args.gfn_flowzero_hidden_dims, 1)
+
+        # teacher model
+        self.teacher_pForwardEncoder = DNN(self.state_dim + self.enc_dim * self.slate_size,
+                                           args.gfn_forward_hidden_dims, self.enc_dim,
+                                           dropout_rate=args.dropout_rate, do_batch_norm=True)
+        self.teacher_pForwardNorm = nn.LayerNorm(self.enc_dim)
+        self.teacher_logFlowZero = DNN(self.state_dim, args.gfn_flowzero_hidden_dims, 1)
     
-    def generate_action(self, user_state, feed_dict):
+    def generate_action(self, user_state, feed_dict, is_teacher=False):
         candidates = feed_dict['candidates']
         slate_size = feed_dict['action_dim']
         parent_slate = feed_dict['action'] # (B, K)
@@ -120,7 +125,7 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         do_uniform = np.random.random() < epsilon
             
         # (B,)
-        logF0 = self.logFlowZero(user_state)
+        logF0 = (self.teacher_logFlowZero if is_teacher else self.logFlowZero)(user_state)
         # (1,L,enc_dim)
         candidate_item_enc, reg = self.userEncoder.get_item_encoding(candidates['item_id'], 
                                                        {k[5:]: v for k,v in candidates.items() if k != 'item_id'}, 
@@ -135,13 +140,15 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         # (B, K, enc_dim)
         current_list_emb = torch.zeros(B, slate_size, self.enc_dim).to(self.device)
         
+        forwardEncoder = self.teacher_pForwardEncoder if is_teacher else self.pForwardEncoder
+        forwardNorm = self.teacher_pForwardNorm if is_teacher else self.pForwardNorm
         # regressive action generation
         for i in range(slate_size):
             # (B, state_dim + slate_size * enc_dim)
             current_state = torch.cat((user_state.view(B, self.state_dim), current_list_emb.view(B, -1)), dim = 1)
             # (B, enc_dim)
-            selection_weight = self.pForwardEncoder(current_state)
-            selection_weight = self.pForwardNorm(selection_weight)
+            selection_weight = forwardEncoder(current_state)
+            selection_weight = forwardNorm(selection_weight)
             # (B, L)
             score = torch.sum(selection_weight.view(B,1,self.enc_dim) * candidate_item_enc, dim = -1) #/ self.enc_dim
             # (B, L)
@@ -182,7 +189,7 @@ class TeacherStudent_TB(BaseOnlinePolicy):
                 else:
                     current_list_emb[:,i,:] = candidate_item_enc.view(-1,self.enc_dim)[indices]
         if is_train:
-            reg = self.get_regularization(self.logFlowZero, self.pForwardEncoder)
+            reg = self.get_regularization(self.teacher_logFlowZero if is_teacher else self.logFlowZero, forwardEncoder)
         else:
             reg = 0
 
@@ -193,7 +200,7 @@ class TeacherStudent_TB(BaseOnlinePolicy):
                     'reg': reg}
         return out_dict
     
-    def get_loss(self, feed_dict, out_dict):
+    def get_loss(self, feed_dict, out_dict, is_teacher=False, student_discrepancy=None):
         '''
         Trajectory balance loss
         @input:
@@ -213,7 +220,10 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         forward_part = out_dict['logF0'].view(-1) + self.gfn_Z
         forward_part = forward_part + torch.sum(out_dict['logP'], dim = 1)
         # (B, )
-        backward_part = torch.log(out_dict['reward'] + self.gfn_reward_smooth).view(-1)
+        if is_teacher and student_discrepancy is not None:
+            backward_part = torch.tensor(student_discrepancy, dtype=torch.float, device=self.device)
+        else:
+            backward_part = torch.log(out_dict['reward'] + self.gfn_reward_smooth).view(-1)
         # (B, )
         TB_loss = torch.mean((forward_part - backward_part).pow(2))
         # (B, )
