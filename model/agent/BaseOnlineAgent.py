@@ -204,10 +204,10 @@ class BaseOnlineAgent():
             policy_output = self.actor(input_dict)
             '''
             self.actor(input_dict)-->
-            SlateGFN_TB(input_dict)-->
-            BaseOnlinePolicy(input_dict)-->
-            BaseOnlinePolicy.generate_action(input_dict)-->
+            BaseModel.forward(input_dict)-->BaseModel.get_forward(input_dict)-->
+            BaseOnlinePolicy.get_forward(input_dict)-->BaseOnlinePolicy.generate_action(self, user_state, feed_dict)-->
             SlateGFN_TB.generate_action(self, user_state, feed_dict)
+            user_state: feed_dict['observation']['state']
             '''
             # apply action on environment
             # Note: action must be indices on env.candidate_iids

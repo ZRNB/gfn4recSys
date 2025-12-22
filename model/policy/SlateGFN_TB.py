@@ -105,6 +105,7 @@ class SlateGFN_TB(BaseOnlinePolicy):
                      'action': (B, K), 
                      'reg': scalar}
         '''
+        print(user_state, feed_dict)
         B = user_state.shape[0]
         # batch-wise candidates has shape (B,L), non-batch-wise candidates has shape (1,L)
         batch_wise = True
