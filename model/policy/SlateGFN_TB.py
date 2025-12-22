@@ -88,7 +88,7 @@ class SlateGFN_TB(BaseOnlinePolicy):
         # flow
         self.logFlowZero = DNN(self.state_dim, args.gfn_flowzero_hidden_dims, 1)
     
-    def generate_action(self, user_state, feed_dict):
+    def generate_action(self, user_state, feed_dict, is_teacher=False):
         candidates = feed_dict['candidates']
         slate_size = feed_dict['action_dim']
         parent_slate = feed_dict['action'] # (B, K)
