@@ -7,7 +7,7 @@ from model.general import BaseModel
 from model.components import DNN
 from model.policy.BaseOnlinePolicy import BaseOnlinePolicy
 
-class SlateGFN_TB(BaseOnlinePolicy):
+class TeacherStudent_TB(BaseOnlinePolicy):
     '''
     GFlowNet with Trajectory Balance for listwise recommendation
     
@@ -70,11 +70,14 @@ class SlateGFN_TB(BaseOnlinePolicy):
         self.gfn_forward_offset = args.gfn_forward_offset
         self.gfn_reward_smooth = args.gfn_reward_smooth
         self.gfn_Z = args.gfn_Z
+
+        # teacher initialization
+        
         super().__init__(args, reader_stats, device)
         self.display_name = "GFN"
         
     def to(self, device):
-        new_self = super(SlateGFN_TB, self).to(device)
+        new_self = super(TeacherStudent_TB, self).to(device)
         return new_self
 
     def _define_params(self, args):
@@ -105,7 +108,6 @@ class SlateGFN_TB(BaseOnlinePolicy):
                      'action': (B, K), 
                      'reg': scalar}
         '''
-        print(user_state.shape, user_state)
         B = user_state.shape[0]
         # batch-wise candidates has shape (B,L), non-batch-wise candidates has shape (1,L)
         batch_wise = True
