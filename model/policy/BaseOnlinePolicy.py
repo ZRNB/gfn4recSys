@@ -95,7 +95,7 @@ class BaseOnlinePolicy(BaseModel):
         # (B, state_dim)
         user_state = state_encoder_output['state']
         # user state --> prob, action
-        out_dict = self.generate_action(user_state, feed_dict, is_teacher=False)
+        out_dict = self.generate_action(user_state, feed_dict)
 
         out_dict['state'] = user_state
         out_dict['reg'] = state_encoder_output['reg'] + out_dict['reg']

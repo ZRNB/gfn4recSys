@@ -96,13 +96,14 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         self.teacher_pForwardNorm = nn.LayerNorm(self.enc_dim)
         self.teacher_logFlowZero = DNN(self.state_dim, args.gfn_flowzero_hidden_dims, 1)
     
-    def generate_action(self, user_state, feed_dict, is_teacher=False):
+    def generate_action(self, user_state, feed_dict):
         candidates = feed_dict['candidates']
         slate_size = feed_dict['action_dim']
         parent_slate = feed_dict['action'] # (B, K)
         do_explore = feed_dict['do_explore']
         is_train = feed_dict['is_train']
         epsilon = feed_dict['epsilon']
+        is_teacher = feed_dict['is_teacher']
         '''
         @input:
         - user_state: (B, state_dim) 
@@ -216,6 +217,12 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         @output
         - loss
         '''
+
+        ###########################
+        #need to implement
+        #is_teacher == True:
+        # require the get_loss of teacher
+        ###########################
         # (B, )
         forward_part = out_dict['logF0'].view(-1) + self.gfn_Z
         forward_part = forward_part + torch.sum(out_dict['logP'], dim = 1)

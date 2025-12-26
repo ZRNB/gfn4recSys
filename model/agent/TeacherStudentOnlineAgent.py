@@ -8,6 +8,19 @@ from tqdm import tqdm
 import utils
 from model.agent.reward_func import *
 
+def get_teacher_reward():
+    # Need to implement
+    '''
+    input:
+        student tb loss
+        training batch
+        log
+        C
+    output:
+        teacher_reward
+    '''
+    return 0
+
 class TeacherStudentOnlineAgent():
     @staticmethod
     def parse_model_args(parser):
@@ -108,7 +121,10 @@ class TeacherStudentOnlineAgent():
             {"params": [self.actor.teacher_logFlowZero]},
             {"params": [self.actor.gfn_Z_teacher]}
         ]
-
+        ######################
+        #need to implement
+        #teacher optimizer
+        ######################
         self.actor_optimizer = torch.optim.Adam(self.params_list_student, lr=args.actor_lr)
         self.actor_optimizer_teacher = torch.optim.Adam(self.params_list_teacher, lr=args.actor_lr_teacher)
         
@@ -140,8 +156,12 @@ class TeacherStudentOnlineAgent():
             # online episode step
             do_buffer_update = True
             do_explore = True
-            observation = self.run_episode_step(i, self.exploration_scheduler.value(i), observation, 
-                                                do_buffer_update, do_explore)                       
+            if i % 2 == 0: # student
+                observation = self.run_episode_step(i, self.exploration_scheduler.value(i), observation, 
+                                                    do_buffer_update, do_explore, is_teacher=False)       
+            else: # teacher
+                observation = self.run_episode_step(i, self.exploration_scheduler.value(i), observation, 
+                                                    do_buffer_update, do_explore, is_teacher=True)                
             # training step
             if i % self.train_every_n_step == 0:
                 self.step_train()
@@ -204,7 +224,12 @@ class TeacherStudentOnlineAgent():
         @output:
         - next_observation
         '''
-        episode_iter, epsilon, observation, do_buffer_update, do_explore = episode_args
+
+        ##############################
+        # need to implement 
+        # teacher's run_episode_step
+        ##############################
+        episode_iter, epsilon, observation, do_buffer_update, do_explore, is_teacher = episode_args
         self.epsilon = epsilon
         with torch.no_grad():
             # wrap observation and candidate items as batch
@@ -218,7 +243,8 @@ class TeacherStudentOnlineAgent():
                         'response': None,
                         'epsilon': epsilon,
                         'do_explore': do_explore, 
-                        'is_train': False}
+                        'is_train': False,
+                        'is_teacher;': is_teacher}
             policy_output = self.actor(input_dict)
             '''
             self.actor(input_dict)-->
@@ -294,7 +320,16 @@ class TeacherStudentOnlineAgent():
         - update training history
         '''
         observation, target_output, target_response, _, __ = self.buffer.sample(self.batch_size)
-        
+        #############################
+        #Need to Implement :         
+        #1. student loss                     
+        #2. student optimizer step
+        #3. student loss append
+        #4. teacher reward
+        #5. teacher loss
+        #6. teacher optimizer step
+        #7. teacher loss append
+        ############################
         # forward pass
         observation['batch_size'] = self.episode_batch_size
         candidate_info = self.env.get_candidate_info(observation)
