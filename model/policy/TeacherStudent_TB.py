@@ -141,8 +141,8 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         # (B, K, enc_dim)
         current_list_emb = torch.zeros(B, slate_size, self.enc_dim).to(self.device)
         
-        forwardEncoder = self.teacher_pForwardEncoder if is_teacher else self.pForwardEncoder
         forwardNorm = self.teacher_pForwardNorm if is_teacher else self.pForwardNorm
+        forwardEncoder = self.teacher_pForwardEncoder if is_teacher else self.pForwardEncoder
         # regressive action generation
         for i in range(slate_size):
             # (B, state_dim + slate_size * enc_dim)
@@ -189,8 +189,15 @@ class TeacherStudent_TB(BaseOnlinePolicy):
                         current_list_emb[j,i,:] = candidate_item_enc[j,indices[j]]
                 else:
                     current_list_emb[:,i,:] = candidate_item_enc.view(-1,self.enc_dim)[indices]
-        if is_train:
-            reg = self.get_regularization(self.teacher_logFlowZero if is_teacher else self.logFlowZero, forwardEncoder)
+        if is_train and is_teacher == False: 
+            ##########################################
+            #Need to implement:
+            #first version:
+            #teacher have not reg in the train phase
+            #may be the second version:
+            #teacher have the reg in the traiin phase
+            ##########################################
+            reg = self.get_regularization(self.logFlowZero, forwardEncoder)
         else:
             reg = 0
 
@@ -201,7 +208,7 @@ class TeacherStudent_TB(BaseOnlinePolicy):
                     'reg': reg}
         return out_dict
     
-    def get_loss(self, feed_dict, out_dict, is_teacher=False, student_discrepancy=None):
+    def get_loss(self, feed_dict, out_dict):
         '''
         Trajectory balance loss
         @input:
@@ -218,24 +225,28 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         - loss
         '''
 
-        ###########################
+        #################################
         #need to implement
         #is_teacher == True:
         # require the get_loss of teacher
-        ###########################
+        #################################
         # (B, )
-        forward_part = out_dict['logF0'].view(-1) + self.gfn_Z
+        is_teacher = feed_dict['is_teacher']
+        forward_part = out_dict['logF0'].view(-1) + (self.gfn_Z if not is_teacher else self.gfn_Z_teacher)
         forward_part = forward_part + torch.sum(out_dict['logP'], dim = 1)
         # (B, )
-        if is_teacher and student_discrepancy is not None:
-            backward_part = torch.tensor(student_discrepancy, dtype=torch.float, device=self.device)
+        if is_teacher :
+            backward_part = torch.log(feed_dict['new_reward'] + self.gfn_reward_smooth).view(-1)
         else:
             backward_part = torch.log(out_dict['reward'] + self.gfn_reward_smooth).view(-1)
         # (B, )
         TB_loss = torch.mean((forward_part - backward_part).pow(2))
         # (B, )
         loss = TB_loss + self.l2_coef * out_dict['reg']
-        return {'loss': loss, 'TB_loss': TB_loss}
+        if is_teacher:
+            return {'teacher_loss': loss, 'teacher_TB_loss': TB_loss}
+        else:
+            return {'loss': loss, 'TB_loss': TB_loss}
 
         
     def get_loss_observation(self):

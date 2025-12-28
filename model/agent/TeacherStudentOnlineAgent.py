@@ -1,3 +1,5 @@
+from typing import Dict, List, Tuple, Union, cast
+import math
 import time
 import copy
 import numpy as np
@@ -8,18 +10,50 @@ from tqdm import tqdm
 import utils
 from model.agent.reward_func import *
 
-def get_teacher_reward():
-    # Need to implement
-    '''
-    input:
-        student tb loss
-        training batch
-        log
-        C
-    output:
-        teacher_reward
-    '''
-    return 0
+def get_teacher_reward(
+    discrepancies: Union[List[float], List[torch.Tensor]],
+    train_batch: List[Tuple],
+    log: bool = True,
+    C: float = 19.0,
+    alpha: float = 1.0,
+) -> Union[List[float], List[torch.Tensor]]:
+    """
+    Compute teacher reward for GFN4Rec based on student discrepancies.
+
+    Args:
+        discrepancies: List of student losses (float) or tensors per trajectory.
+        train_batch: List of training tuples from buffer, where the 4th element is the reward.
+        log: Whether to take log of the adjusted reward.
+        C: Scaling factor for positive student discrepancy.
+        alpha: Exponent for reward weighting.
+
+    Returns:
+        List of teacher rewards, same type as discrepancies.
+    """
+    teacher_rewards = []
+
+    if isinstance(discrepancies[0], torch.Tensor):
+        # Tensor case
+        for _d, _tup in zip(discrepancies, train_batch):
+            _d = _d.clone().detach()
+            # Base reward: original reward + 1
+            _r = torch.ones_like(_d)
+            _r[-1] += _tup[3]  # reward from train_batch tuple
+            # Adjust student discrepancy
+            _a_r = (_d ** 2) * (1.0 + torch.where(_d > 0, torch.tensor(C, device=_d.device), 0.0))
+            # Optionally take log and apply reward exponent
+            if log:
+                teacher_rewards.append((1.0 + 1e-3 + _a_r).log() * (_r ** alpha))
+            else:
+                teacher_rewards.append(_a_r * (_r ** alpha))
+    else:
+        # float case
+        maybe_log = lambda x: math.log(1.0 + 1e-3 + x) if log else x
+        for _d, _tup in zip(discrepancies, train_batch):
+            adj = (_d ** 2) * (1.0 + (C if _d > 0 else 0.0))
+            teacher_rewards.append(maybe_log(adj) * (_tup[3] ** alpha))
+
+    return teacher_rewards
 
 class TeacherStudentOnlineAgent():
     @staticmethod
@@ -320,16 +354,7 @@ class TeacherStudentOnlineAgent():
         - update training history
         '''
         observation, target_output, target_response, _, __ = self.buffer.sample(self.batch_size)
-        #############################
-        #Need to Implement :         
-        #1. student loss                     
-        #2. student optimizer step
-        #3. student loss append
-        #4. teacher reward
-        #5. teacher loss
-        #6. teacher optimizer step
-        #7. teacher loss append
-        ############################
+
         # forward pass
         observation['batch_size'] = self.episode_batch_size
         candidate_info = self.env.get_candidate_info(observation)
@@ -338,7 +363,10 @@ class TeacherStudentOnlineAgent():
                     'action_dim': self.env.action_dim,
                     'action': target_output['action'], 
                     'response': target_response,
-                    'epsilon': 0, 'do_explore': False, 'is_train': True}
+                    'epsilon': 0, 
+                    'do_explore': False, 
+                    'is_train': True,
+                    'is_teacher': False}
         policy_output = self.actor(input_dict)
 
         # loss
@@ -348,6 +376,7 @@ class TeacherStudentOnlineAgent():
 
         loss_dict = self.actor.get_loss(input_dict, policy_output)
         actor_loss = loss_dict['loss']
+        discrepancies = actor_loss #to compute the reward of teacher
         # optimize
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
@@ -358,7 +387,36 @@ class TeacherStudentOnlineAgent():
                 self.training_history[k].append(loss_dict[k].item())
             except:
                 self.training_history[k].append(loss_dict[k])
-
+        #############################
+        #Need to Implement :         
+        #. teacher reward
+        #. teacher loss
+        #. teacher optimizer step
+        #. teacher loss append
+        ############################
+        teacher_reward = get_teacher_reward(discrepancies)
+        input_dict_teacher = {'observation': observation, 
+                            'candidates': candidate_info, 
+                            'action_dim': self.env.action_dim,
+                            'action': target_output['action'], 
+                            'response': target_response,
+                            'epsilon': 0, 
+                            'do_explore': False, 
+                            'is_train': True,
+                            'is_teacher': True,
+                            'discrepancies': discrepancies,
+                            'new_reward': teacher_reward}
+        policy_output_teacher = self.actor(input_dict)
+        loss_dict_teacher = self.actor.get_loss(input_dict_teacher, policy_output_teacher)
+        actor_loss_teacher = loss_dict_teacher['teacher_loss']
+        self.actor_optimizer_teacher.zero_grad()
+        actor_loss_teacher.backward()
+        self.actor_optimizer_teacher.step()
+        for k in loss_dict_teacher:
+            try:
+                self.training_history[k].append(loss_dict_teacher[k].item())
+            except:
+                self.training_history[k].append(loss_dict_teacher[k])
 
         return {"step_loss": (self.training_history['loss'][-1])}
     
