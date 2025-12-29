@@ -68,7 +68,7 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         self.gfn_reward_smooth = args.gfn_reward_smooth
         self.gfn_Z = args.gfn_Z
         self.gfn_Z_teacher = args.gfn_Z_teacher
-        self.beta_teracher = args.beta_teacher
+        self.beta_teacher = args.beta_teacher
         # teacher initialization
         
         super().__init__(args, reader_stats, device)
@@ -95,6 +95,24 @@ class TeacherStudent_TB(BaseOnlinePolicy):
                                            dropout_rate=args.dropout_rate, do_batch_norm=True)
         self.teacher_pForwardNorm = nn.LayerNorm(self.enc_dim)
         self.teacher_logFlowZero = DNN(self.state_dim, args.gfn_flowzero_hidden_dims, 1)
+    
+    def student_head_parameters(self):
+        return (
+            list(self.pForwardEncoder.parameters()) +
+            list(self.pForwardNorm.parameters()) +
+            list(self.logFlowZero.parameters())
+        )
+
+    def teacher_head_parameters(self):
+        return (
+            list(self.teacher_pForwardEncoder.parameters()) +
+            list(self.teacher_pForwardNorm.parameters()) +
+            list(self.teacher_logFlowZero.parameters())
+        )
+
+    def shared_parameters(self):
+        # userEncoder + 其他 backbone（如果 BaseOnlinePolicy 里还有）
+        return list(self.userEncoder.parameters())
     
     def generate_action(self, user_state, feed_dict):
         candidates = feed_dict['candidates']
@@ -236,20 +254,27 @@ class TeacherStudent_TB(BaseOnlinePolicy):
         forward_part = forward_part + torch.sum(out_dict['logP'], dim = 1)
         # (B, )
         if is_teacher :
-            backward_part = torch.log(feed_dict['new_reward'] + self.gfn_reward_smooth).view(-1)
+            if not torch.isfinite(feed_dict['new_reward']).all():
+                print("NaN/Inf in new_reward before log:", 
+                    feed_dict['new_reward'].min().item(), 
+                    feed_dict['new_reward'].max().item())
+            reward_with_smooth = feed_dict['new_reward'] + self.gfn_reward_smooth
+            reward_with_smooth = torch.clamp(reward_with_smooth, min=1e-8)
+            backward_part = torch.log(reward_with_smooth).view(-1)
         else:
             backward_part = torch.log(out_dict['reward'] + self.gfn_reward_smooth).view(-1)
+        per_sample_TB_loss = (forward_part - backward_part).pow(2)
         # (B, )
         TB_loss = torch.mean((forward_part - backward_part).pow(2))
         # (B, )
         loss = TB_loss + self.l2_coef * out_dict['reg']
         if is_teacher:
-            return {'teacher_loss': loss, 'teacher_TB_loss': TB_loss}
+            return {'teacher_loss': loss, 'teacher_TB_loss': TB_loss, 'teacher_per_sample_TB_loss': per_sample_TB_loss}
         else:
-            return {'loss': loss, 'TB_loss': TB_loss}
+            return {'loss': loss, 'TB_loss': TB_loss, 'per_sample_TB_loss': per_sample_TB_loss}
 
         
     def get_loss_observation(self):
-        return ['loss', 'TB_loss']
+        return ['loss', 'TB_loss', 'teacher_loss', 'teacher_TB_loss']
         
         

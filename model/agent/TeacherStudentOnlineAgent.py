@@ -11,47 +11,46 @@ import utils
 from model.agent.reward_func import *
 
 def get_teacher_reward(
-    discrepancies: Union[List[float], List[torch.Tensor]],
-    train_batch: List[Tuple],
+    discrepancies: Union[List[float], List[torch.Tensor], torch.Tensor],
+    reward: Union[List[Tuple], torch.Tensor],
     log: bool = True,
     C: float = 19.0,
     alpha: float = 1.0,
-) -> Union[List[float], List[torch.Tensor]]:
+) -> torch.Tensor:
     """
     Compute teacher reward for GFN4Rec based on student discrepancies.
 
     Args:
-        discrepancies: List of student losses (float) or tensors per trajectory.
-        train_batch: List of training tuples from buffer, where the 4th element is the reward.
+        discrepancies: Student losses - can be List[float], List[torch.Tensor], or torch.Tensor of shape (B,)
+        reward: Environment rewards - can be List[Tuple] or torch.Tensor of shape (B,)
         log: Whether to take log of the adjusted reward.
         C: Scaling factor for positive student discrepancy.
         alpha: Exponent for reward weighting.
 
     Returns:
-        List of teacher rewards, same type as discrepancies.
+        Teacher rewards as torch.Tensor of shape (B,)
     """
     teacher_rewards = []
 
     if isinstance(discrepancies[0], torch.Tensor):
         # Tensor case
-        for _d, _tup in zip(discrepancies, train_batch):
+        for _d, _tup in zip(discrepancies, reward): # discrepancies include all the trajectories of sampling
             _d = _d.clone().detach()
-            # Base reward: original reward + 1
-            _r = torch.ones_like(_d)
-            _r[-1] += _tup[3]  # reward from train_batch tuple
-            # Adjust student discrepancy
-            _a_r = (_d ** 2) * (1.0 + torch.where(_d > 0, torch.tensor(C, device=_d.device), 0.0))
+            _r = torch.ones_like(_d) # _r is the terminal reward of env
+            _r += _tup  # add the terminal reward of env like : [1,1,1,...,1+r(T)]
+            _a_r = _d * (1.0 + torch.where(_d > 0, torch.tensor(C, device=_d.device), 0.0)) #huge the student discrepancies (1+C)
             # Optionally take log and apply reward exponent
             if log:
                 teacher_rewards.append((1.0 + 1e-3 + _a_r).log() * (_r ** alpha))
             else:
                 teacher_rewards.append(_a_r * (_r ** alpha))
+        teacher_rewards = torch.stack(teacher_rewards)
     else:
         # float case
         maybe_log = lambda x: math.log(1.0 + 1e-3 + x) if log else x
-        for _d, _tup in zip(discrepancies, train_batch):
+        for _d, _tup in zip(discrepancies, reward):
             adj = (_d ** 2) * (1.0 + (C if _d > 0 else 0.0))
-            teacher_rewards.append(maybe_log(adj) * (_tup[3] ** alpha))
+            teacher_rewards.append(maybe_log(adj) * (_tup ** alpha))
 
     return teacher_rewards
 
@@ -108,7 +107,7 @@ class TeacherStudentOnlineAgent():
         parser.add_argument('--explore_rate', type=float, default=1, 
                             help='probability of engaging exploration')
         return parser
-    
+
     def __init__(self, *input_args):
         args, actor, env, buffer = input_args
         
@@ -142,26 +141,13 @@ class TeacherStudentOnlineAgent():
         self.actor = actor
         # self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=args.actor_lr, 
         #                                         weight_decay=args.actor_decay)
-        self.params_list_student = [
-            {"params": self.actor.pForwardEncoder.parameters()},
-            {"params": self.actor.pForwardNorm.parameters()},
-            {"params": [self.actor.logFlowZero]},
-            {"params": [self.actor.gfn_Z]}
-        ]
-
-        self.params_list_teacher = [
-            {"params": self.actor.teacher_pForwardEncoder.parameters()},
-            {"params": self.actor.teacher_pForwardNorm.parameters()},
-            {"params": [self.actor.teacher_logFlowZero]},
-            {"params": [self.actor.gfn_Z_teacher]}
-        ]
         ######################
         #need to implement
-        #teacher optimizer
+        #student and teacher optimizer
         ######################
-        self.actor_optimizer = torch.optim.Adam(self.params_list_student, lr=args.actor_lr)
-        self.actor_optimizer_teacher = torch.optim.Adam(self.params_list_teacher, lr=args.actor_lr_teacher)
-        
+        self.actor_optimizer = torch.optim.Adam(self.actor.shared_parameters() + self.actor.student_head_parameters(), lr=args.actor_lr, weight_decay=args.actor_decay)
+        self.actor_optimizer_teacher = torch.optim.Adam(self.actor.teacher_head_parameters(), lr=args.actor_lr_teacher)
+
         self.buffer = buffer
         
         # create new report file if train the first time
@@ -192,10 +178,10 @@ class TeacherStudentOnlineAgent():
             do_explore = True
             if i % 2 == 0: # student
                 observation = self.run_episode_step(i, self.exploration_scheduler.value(i), observation, 
-                                                    do_buffer_update, do_explore, is_teacher=False)       
+                                                    do_buffer_update, do_explore, False)       
             else: # teacher
                 observation = self.run_episode_step(i, self.exploration_scheduler.value(i), observation, 
-                                                    do_buffer_update, do_explore, is_teacher=True)                
+                                                    do_buffer_update, do_explore, True)                
             # training step
             if i % self.train_every_n_step == 0:
                 self.step_train()
@@ -241,7 +227,7 @@ class TeacherStudentOnlineAgent():
             do_buffer_update = True
             do_explore = np.random.random() < self.explore_rate
             observation = self.run_episode_step(0, initial_epsilon, observation, 
-                                                do_buffer_update, do_explore)
+                                                do_buffer_update, do_explore, False)
         return observation
 
         
@@ -278,7 +264,7 @@ class TeacherStudentOnlineAgent():
                         'epsilon': epsilon,
                         'do_explore': do_explore, 
                         'is_train': False,
-                        'is_teacher;': is_teacher}
+                        'is_teacher': is_teacher}
             policy_output = self.actor(input_dict)
             '''
             self.actor(input_dict)-->
@@ -376,25 +362,31 @@ class TeacherStudentOnlineAgent():
 
         loss_dict = self.actor.get_loss(input_dict, policy_output)
         actor_loss = loss_dict['loss']
-        discrepancies = actor_loss #to compute the reward of teacher
+        per_sample_TB_loss = loss_dict['per_sample_TB_loss']
+        discrepancies = per_sample_TB_loss.detach() #to compute the reward of teacher
         # optimize
         self.actor_optimizer.zero_grad()
         actor_loss.backward()
         self.actor_optimizer.step()
         
-        for k in loss_dict:
-            try:
-                self.training_history[k].append(loss_dict[k].item())
-            except:
-                self.training_history[k].append(loss_dict[k])
+        for k in ['loss', 'TB_loss']:
+            if k in loss_dict:
+                try:
+                    self.training_history[k].append(loss_dict[k].item())
+                except:
+                    self.training_history[k].append(loss_dict[k])
         #############################
         #Need to Implement :         
         #. teacher reward
         #. teacher loss
         #. teacher optimizer step
         #. teacher loss append
-        ############################
-        teacher_reward = get_teacher_reward(discrepancies)
+        #############################
+        if not torch.isfinite(discrepancies).all():
+            print("NaN/Inf in discrepancies:", discrepancies.min().item(), discrepancies.max().item())
+        teacher_reward = get_teacher_reward(discrepancies, target_response["reward"])
+        if not torch.isfinite(teacher_reward).all():
+            print("NaN/Inf in teacher_reward:", teacher_reward.min().item(), teacher_reward.max().item())
         input_dict_teacher = {'observation': observation, 
                             'candidates': candidate_info, 
                             'action_dim': self.env.action_dim,
@@ -406,17 +398,19 @@ class TeacherStudentOnlineAgent():
                             'is_teacher': True,
                             'discrepancies': discrepancies,
                             'new_reward': teacher_reward}
-        policy_output_teacher = self.actor(input_dict)
+        policy_output_teacher = self.actor(input_dict_teacher)
         loss_dict_teacher = self.actor.get_loss(input_dict_teacher, policy_output_teacher)
         actor_loss_teacher = loss_dict_teacher['teacher_loss']
         self.actor_optimizer_teacher.zero_grad()
         actor_loss_teacher.backward()
         self.actor_optimizer_teacher.step()
-        for k in loss_dict_teacher:
-            try:
-                self.training_history[k].append(loss_dict_teacher[k].item())
-            except:
-                self.training_history[k].append(loss_dict_teacher[k])
+        # Record teacher loss
+        for k in ['teacher_loss', 'teacher_TB_loss']:
+            if k in loss_dict_teacher:
+                try:
+                    self.training_history[k].append(loss_dict_teacher[k].item())
+                except:
+                    self.training_history[k].append(loss_dict_teacher[k])
 
         return {"step_loss": (self.training_history['loss'][-1])}
     
@@ -444,7 +438,10 @@ class TeacherStudentOnlineAgent():
                         'candidates': candidate_info, 
                         'action_dim': self.env.action_dim,
                         'action': None, 'response': None,
-                        'epsilon': 0, 'do_explore': False, 'is_train': False}
+                        'epsilon': 0, 
+                        'do_explore': False, 
+                        'is_train': False,
+                        'is_teacher': False}
             policy_output = self.actor(input_dict)
             # apply action on environment
             # Note: action must be indices on env.candidate_iids
