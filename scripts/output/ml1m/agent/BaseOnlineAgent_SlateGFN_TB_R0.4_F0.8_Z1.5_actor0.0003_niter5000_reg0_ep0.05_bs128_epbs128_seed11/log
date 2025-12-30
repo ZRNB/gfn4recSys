@@ -1,0 +1,833 @@
+Loading environment
+Load immediate user response model
+Load (checkpoint) from output/ml1m/env/user_KRMBUserResponse_MaxOut_lr0.0001_reg0.1.model.checkpoint
+{'raw_data_size': 995154, 'data_size': [930014, 28060, 28060], 'n_user': 6022, 'n_item': 3043, 'max_seq_len': 50, 'user_features': ['gender', 'age'], 'user_feature_dims': {'gender': 2, 'age': 7}, 'item_features': ['genres'], 'item_feature_dims': {'genres': 18}, 'feedback_type': ['is_click', 'is_like', 'is_star'], 'feedback_size': 3, 'feedback_negative_sample_rate': {'is_click': 5.136864824864332, 'is_like': 1.3583748453666884, 'is_star': 0.2931366510474735}}
+Load user sequence reader
+initiate MovieLens sequence reader
+Loading data files
+Load item meta data
+Load user meta data
+build vocab for onehot features
+build vocab for multihot features:
+	genres
+sequence holdout for users (-1, 0, 0)
+{'raw_data_size': 995154, 'data_size': [995154, 0, 0], 'n_user': 6022, 'n_item': 3043, 'max_seq_len': 50, 'user_features': ['gender', 'age'], 'user_feature_dims': {'gender': 2, 'age': 7}, 'item_features': ['genres'], 'item_feature_dims': {'genres': 18}, 'feedback_type': ['is_click', 'is_like', 'is_star'], 'feedback_size': 3, 'feedback_negative_sample_rate': {'is_click': 5.136864824864332, 'is_like': 1.3583748453666884, 'is_star': 0.2931366510474735}}
+Setup candiate item pool
+Setup policy:
+SlateGFN_TB(
+  (userEncoder): BackboneUserEncoder(
+    (uIDEmb): Embedding(6023, 16)
+    (UFEmb_gender): Linear(in_features=2, out_features=16, bias=True)
+    (UFEmb_age): Linear(in_features=7, out_features=16, bias=True)
+    (iIDEmb): Embedding(3044, 16)
+    (IFEmb_genres): Linear(in_features=18, out_features=16, bias=True)
+    (feedbackEncoder): Linear(in_features=3, out_features=32, bias=True)
+    (itemEmbNorm): LayerNorm((16,), eps=1e-05, elementwise_affine=True)
+    (userEmbNorm): LayerNorm((16,), eps=1e-05, elementwise_affine=True)
+    (itemFeatureKernel): Linear(in_features=16, out_features=32, bias=True)
+    (userFeatureKernel): Linear(in_features=16, out_features=32, bias=True)
+    (encDropout): Dropout(p=0.1, inplace=False)
+    (encNorm): LayerNorm((32,), eps=1e-05, elementwise_affine=True)
+    (posEmb): Embedding(50, 32)
+    (transformer): TransformerEncoder(
+      (layers): ModuleList(
+        (0-1): 2 x TransformerEncoderLayer(
+          (self_attn): MultiheadAttention(
+            (out_proj): NonDynamicallyQuantizableLinear(in_features=64, out_features=64, bias=True)
+          )
+          (linear1): Linear(in_features=64, out_features=64, bias=True)
+          (dropout): Dropout(p=0.1, inplace=False)
+          (linear2): Linear(in_features=64, out_features=64, bias=True)
+          (norm1): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+          (norm2): LayerNorm((64,), eps=1e-05, elementwise_affine=True)
+          (dropout1): Dropout(p=0.1, inplace=False)
+          (dropout2): Dropout(p=0.1, inplace=False)
+        )
+      )
+    )
+    (stateNorm): LayerNorm((32,), eps=1e-05, elementwise_affine=True)
+    (finalStateLayer): DNN(
+      (layers): Sequential(
+        (0): Linear(in_features=96, out_features=128, bias=True)
+        (1): ReLU()
+        (2): Dropout(p=0.1, inplace=False)
+        (3): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+        (4): Linear(in_features=128, out_features=32, bias=True)
+      )
+    )
+    (sigmoid): Sigmoid()
+  )
+  (bce_loss): BCEWithLogitsLoss()
+  (pForwardEncoder): DNN(
+    (layers): Sequential(
+      (0): Linear(in_features=224, out_features=128, bias=True)
+      (1): ReLU()
+      (2): Dropout(p=0.1, inplace=False)
+      (3): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+      (4): Linear(in_features=128, out_features=32, bias=True)
+    )
+  )
+  (pForwardNorm): LayerNorm((32,), eps=1e-05, elementwise_affine=True)
+  (logFlowZero): DNN(
+    (layers): Sequential(
+      (0): Linear(in_features=32, out_features=128, bias=True)
+      (1): ReLU()
+      (2): LayerNorm((128,), eps=1e-05, elementwise_affine=True)
+      (3): Linear(in_features=128, out_features=1, bias=True)
+    )
+  )
+  (sigmoid): Sigmoid()
+)
+<model.buffer.SequentialBuffer.SequentialBuffer object at 0x7f2d963780d0>
+Setup agent
+<model.agent.BaseOnlineAgent.BaseOnlineAgent object at 0x7f2d96378070>
+Namespace(actor_decay=0.0, actor_lr=0.0003, batch_size=128, buffer_random_rate=0, buffer_size=50000, check_episode=20, cuda=0, device='cuda:0', dropout_rate=0.1, elbow_greedy=0.1, env_test_holdout=0, env_val_holdout=0, episode_batch_size=128, explore_rate=1.0, final_greedy_epsilon=0.01, gfn_Z=1.5, gfn_flowzero_hidden_dims=[128], gfn_forward_hidden_dims=[128], gfn_forward_offset=0.8, gfn_reward_smooth=0.4, initial_greedy_epsilon=0.05, initial_temper=5, item_correlation=0.2, item_latent_dim=16, l2_coef=0.0, loss='TB', max_step_per_episode=5, model_path='', n_iter=[5000], new_reader_class='', reward_func='get_immediate_reward', save_episode=200, save_path='output/ml1m/agent//BaseOnlineAgent_SlateGFN_TB_R0.4_F0.8_Z1.5_actor0.0003_niter5000_reg0_ep0.05_bs128_epbs128_seed11/model', seed=11, single_response=False, slate_size=6, start_train_at_step=10, state_hidden_dims=[128], test_episode=20, train_every_n_step=1, transformer_d_forward=64, transformer_enc_dim=32, transformer_n_head=4, transformer_n_layer=2, uirm_log_path='output/ml1m/env/log/user_KRMBUserResponse_MaxOut_lr0.0001_reg0.1.model.log', user_latent_dim=16)
+Run procedures before training
+Training:
+Episode step 20, time diff 2.7456793785095215, total time diff 0.0)
+step: 20 @ online episode: {'avg_reward': 0.7255208641290665, 'max_reward': 2.0000000476837156, 'reward_variance': 0.17719561122357846, 'coverage': 472.25, 'intra_slate_diversity': 0.7855343841016292, 'is_click_rate': 0.26647135987877846, 'is_like_rate': 0.23404948487877847, 'is_star_rate': 0.22500000521540642} @ training: {'loss': 0.27457002773880956, 'TB_loss': 0.27457002773880956}
+
+Episode step 40, time diff 2.4697988033294678, total time diff 2.7456793785095215)
+step: 40 @ online episode: {'avg_reward': 0.8464843958616257, 'max_reward': 2.2583333969116213, 'reward_variance': 0.20238170251250268, 'coverage': 477.0, 'intra_slate_diversity': 0.7881255798041821, 'is_click_rate': 0.3050781346857548, 'is_like_rate': 0.2773437604308128, 'is_star_rate': 0.26406250447034835} @ training: {'loss': 0.15879294648766518, 'TB_loss': 0.15879294648766518}
+
+Episode step 60, time diff 2.5022754669189453, total time diff 5.215478181838989)
+step: 60 @ online episode: {'avg_reward': 0.8893229395151139, 'max_reward': 2.1916667401790617, 'reward_variance': 0.19752485752105714, 'coverage': 499.8, 'intra_slate_diversity': 0.7879713885486126, 'is_click_rate': 0.31855469569563866, 'is_like_rate': 0.29277344346046447, 'is_star_rate': 0.2779948003590107} @ training: {'loss': 0.13803712762892245, 'TB_loss': 0.13803712762892245}
+
+Episode step 80, time diff 2.933455228805542, total time diff 7.717753648757935)
+step: 80 @ online episode: {'avg_reward': 0.8998698234558106, 'max_reward': 2.2583334028720854, 'reward_variance': 0.2074924610555172, 'coverage': 520.8, 'intra_slate_diversity': 0.7872218929231167, 'is_click_rate': 0.3305338606238365, 'is_like_rate': 0.2933593824505806, 'is_star_rate': 0.2759765699505806} @ training: {'loss': 0.14823451191186904, 'TB_loss': 0.14823451191186904}
+
+Episode step 100, time diff 2.6738121509552, total time diff 10.651208877563477)
+step: 100 @ online episode: {'avg_reward': 0.888737004995346, 'max_reward': 2.2416667580604552, 'reward_variance': 0.21129080057144164, 'coverage': 508.5, 'intra_slate_diversity': 0.7869525469839573, 'is_click_rate': 0.32773438543081285, 'is_like_rate': 0.2870442770421505, 'is_star_rate': 0.2739583425223827} @ training: {'loss': 0.14688230790197848, 'TB_loss': 0.14688230790197848}
+
+Episode step 120, time diff 2.635216236114502, total time diff 13.325021028518677)
+step: 120 @ online episode: {'avg_reward': 0.9509766131639481, 'max_reward': 2.3000001072883607, 'reward_variance': 0.2164227582514286, 'coverage': 495.5, 'intra_slate_diversity': 0.7832773432135582, 'is_click_rate': 0.3473958447575569, 'is_like_rate': 0.3071614667773247, 'is_star_rate': 0.2964192807674408} @ training: {'loss': 0.13242550753057003, 'TB_loss': 0.13242550753057003}
+
+Episode step 140, time diff 2.6711130142211914, total time diff 15.960237264633179)
+step: 140 @ online episode: {'avg_reward': 1.0073568165302276, 'max_reward': 2.358333432674408, 'reward_variance': 0.22588353529572486, 'coverage': 455.9, 'intra_slate_diversity': 0.7810385942459106, 'is_click_rate': 0.3643880322575569, 'is_like_rate': 0.33183594793081284, 'is_star_rate': 0.3111328199505806} @ training: {'loss': 0.12703545205295086, 'TB_loss': 0.12703545205295086}
+
+Episode step 160, time diff 2.645358085632324, total time diff 18.63135027885437)
+step: 160 @ online episode: {'avg_reward': 1.0598958790302277, 'max_reward': 2.408333396911621, 'reward_variance': 0.24839069247245787, 'coverage': 435.05, 'intra_slate_diversity': 0.7813675262033939, 'is_click_rate': 0.39134115278720855, 'is_like_rate': 0.34062501043081284, 'is_star_rate': 0.32792970091104506} @ training: {'loss': 0.1209751158952713, 'TB_loss': 0.1209751158952713}
+
+Episode step 180, time diff 2.7515859603881836, total time diff 21.276708364486694)
+step: 180 @ online episode: {'avg_reward': 1.1158203601837158, 'max_reward': 2.4250001072883607, 'reward_variance': 0.254870268702507, 'coverage': 392.2, 'intra_slate_diversity': 0.7777807727456093, 'is_click_rate': 0.4095052182674408, 'is_like_rate': 0.3594401150941849, 'is_star_rate': 0.3468750089406967} @ training: {'loss': 0.11516318023204804, 'TB_loss': 0.11516318023204804}
+
+Episode step 200, time diff 2.772221088409424, total time diff 24.028294324874878)
+step: 200 @ online episode: {'avg_reward': 1.160351601243019, 'max_reward': 2.5666667580604554, 'reward_variance': 0.2736686244606972, 'coverage': 401.55, 'intra_slate_diversity': 0.7768883630633354, 'is_click_rate': 0.41477865874767306, 'is_like_rate': 0.378971366584301, 'is_star_rate': 0.36660157293081286} @ training: {'loss': 0.1112582866102457, 'TB_loss': 0.1112582866102457}
+
+Episode step 220, time diff 2.4875826835632324, total time diff 26.8005154132843)
+step: 220 @ online episode: {'avg_reward': 1.1168620049953462, 'max_reward': 2.4166667342185972, 'reward_variance': 0.24654359519481658, 'coverage': 426.6, 'intra_slate_diversity': 0.777078079432249, 'is_click_rate': 0.41087240278720855, 'is_like_rate': 0.36009115278720855, 'is_star_rate': 0.34589844569563866} @ training: {'loss': 0.1120101548731327, 'TB_loss': 0.1120101548731327}
+
+Episode step 240, time diff 2.482875108718872, total time diff 29.288098096847534)
+step: 240 @ online episode: {'avg_reward': 1.1646484792232514, 'max_reward': 2.4750000715255736, 'reward_variance': 0.26434983760118486, 'coverage': 365.65, 'intra_slate_diversity': 0.7719306901097298, 'is_click_rate': 0.42272136360406876, 'is_like_rate': 0.38437501043081285, 'is_star_rate': 0.35755209550261496} @ training: {'loss': 0.10619352497160435, 'TB_loss': 0.10619352497160435}
+
+Episode step 260, time diff 2.4013359546661377, total time diff 31.770973205566406)
+step: 260 @ online episode: {'avg_reward': 1.270768266916275, 'max_reward': 2.6166667342185974, 'reward_variance': 0.28727813363075255, 'coverage': 331.8, 'intra_slate_diversity': 0.7663538016378879, 'is_click_rate': 0.4608073025941849, 'is_like_rate': 0.4167968839406967, 'is_star_rate': 0.39316407293081285} @ training: {'loss': 0.09258875623345375, 'TB_loss': 0.09258875623345375}
+
+Episode step 280, time diff 2.825474500656128, total time diff 34.172309160232544)
+step: 280 @ online episode: {'avg_reward': 1.250455766916275, 'max_reward': 2.5666667342185976, 'reward_variance': 0.2675862543284893, 'coverage': 334.45, 'intra_slate_diversity': 0.7669798359274864, 'is_click_rate': 0.455338554084301, 'is_like_rate': 0.40774740278720856, 'is_star_rate': 0.3873697996139526} @ training: {'loss': 0.0929449949413538, 'TB_loss': 0.0929449949413538}
+
+Episode step 300, time diff 2.59720778465271, total time diff 36.99778366088867)
+step: 300 @ online episode: {'avg_reward': 1.3213542133569718, 'max_reward': 2.641666740179062, 'reward_variance': 0.2818217664957047, 'coverage': 321.7, 'intra_slate_diversity': 0.7625351622700691, 'is_click_rate': 0.47682293206453324, 'is_like_rate': 0.43111980259418486, 'is_star_rate': 0.41341146677732465} @ training: {'loss': 0.09478543102741241, 'TB_loss': 0.09478543102741241}
+
+Episode step 320, time diff 2.5882391929626465, total time diff 39.59499144554138)
+step: 320 @ online episode: {'avg_reward': 1.3211589127779007, 'max_reward': 2.5666667819023132, 'reward_variance': 0.2744919076561928, 'coverage': 309.65, 'intra_slate_diversity': 0.7597447440028191, 'is_click_rate': 0.4743489742279053, 'is_like_rate': 0.4329427182674408, 'is_star_rate': 0.413867199420929} @ training: {'loss': 0.09070202559232712, 'TB_loss': 0.09070202559232712}
+
+Episode step 340, time diff 2.7586214542388916, total time diff 42.18323063850403)
+step: 340 @ online episode: {'avg_reward': 1.3192057728767395, 'max_reward': 2.608333396911621, 'reward_variance': 0.28791705071926116, 'coverage': 299.75, 'intra_slate_diversity': 0.7624063499271869, 'is_click_rate': 0.4716796949505806, 'is_like_rate': 0.4307942822575569, 'is_star_rate': 0.4167317822575569} @ training: {'loss': 0.0839218482375145, 'TB_loss': 0.0839218482375145}
+
+Episode step 360, time diff 2.461439371109009, total time diff 44.94185209274292)
+step: 360 @ online episode: {'avg_reward': 1.2814453542232513, 'max_reward': 2.558333396911621, 'reward_variance': 0.2791694991290569, 'coverage': 317.7, 'intra_slate_diversity': 0.7659122630953789, 'is_click_rate': 0.465885429084301, 'is_like_rate': 0.41393230110406876, 'is_star_rate': 0.40162761211395265} @ training: {'loss': 0.0871953409165144, 'TB_loss': 0.0871953409165144}
+
+Episode step 380, time diff 2.7828643321990967, total time diff 47.40329146385193)
+step: 380 @ online episode: {'avg_reward': 1.3343750417232514, 'max_reward': 2.6000000715255736, 'reward_variance': 0.27456461563706397, 'coverage': 324.75, 'intra_slate_diversity': 0.7618368931114674, 'is_click_rate': 0.4826172009110451, 'is_like_rate': 0.43639323860406876, 'is_star_rate': 0.41536459475755694} @ training: {'loss': 0.08446478210389614, 'TB_loss': 0.08446478210389614}
+
+Episode step 400, time diff 2.6198434829711914, total time diff 50.186155796051025)
+step: 400 @ online episode: {'avg_reward': 1.3892578661441803, 'max_reward': 2.683333420753479, 'reward_variance': 0.29027668163180353, 'coverage': 298.0, 'intra_slate_diversity': 0.7571134582161904, 'is_click_rate': 0.49960938692092893, 'is_like_rate': 0.453450533747673, 'is_star_rate': 0.436197929084301} @ training: {'loss': 0.07948675025254488, 'TB_loss': 0.07948675025254488}
+
+Episode step 420, time diff 2.576650857925415, total time diff 52.80599927902222)
+step: 420 @ online episode: {'avg_reward': 1.3719401597976684, 'max_reward': 2.708333432674408, 'reward_variance': 0.2862612433731556, 'coverage': 278.7, 'intra_slate_diversity': 0.7591860018670559, 'is_click_rate': 0.4960286632180214, 'is_like_rate': 0.4485677182674408, 'is_star_rate': 0.4273437589406967} @ training: {'loss': 0.07672962341457605, 'TB_loss': 0.07672962341457605}
+
+Episode step 440, time diff 2.4105470180511475, total time diff 55.38265013694763)
+step: 440 @ online episode: {'avg_reward': 1.3755208849906921, 'max_reward': 2.683333432674408, 'reward_variance': 0.29207388386130334, 'coverage': 292.85, 'intra_slate_diversity': 0.7577645428478718, 'is_click_rate': 0.4980468973517418, 'is_like_rate': 0.4507812589406967, 'is_star_rate': 0.42669272124767305} @ training: {'loss': 0.07123475652188063, 'TB_loss': 0.07123475652188063}
+
+Episode step 460, time diff 2.478912591934204, total time diff 57.79319715499878)
+step: 460 @ online episode: {'avg_reward': 1.435286521911621, 'max_reward': 2.6750001072883607, 'reward_variance': 0.2861312858760357, 'coverage': 277.8, 'intra_slate_diversity': 0.7549090273678303, 'is_click_rate': 0.5141276210546494, 'is_like_rate': 0.4733073070645332, 'is_star_rate': 0.44785157293081285} @ training: {'loss': 0.06631635185331106, 'TB_loss': 0.06631635185331106}
+
+Episode step 480, time diff 2.835718870162964, total time diff 60.27210974693298)
+step: 480 @ online episode: {'avg_reward': 1.3920573353767396, 'max_reward': 2.6750000953674316, 'reward_variance': 0.28410572186112404, 'coverage': 291.9, 'intra_slate_diversity': 0.7602118656039238, 'is_click_rate': 0.5030599117279053, 'is_like_rate': 0.45774740278720855, 'is_star_rate': 0.43125001043081285} @ training: {'loss': 0.07278496976941824, 'TB_loss': 0.07278496976941824}
+
+Episode step 500, time diff 2.47068452835083, total time diff 63.10782861709595)
+step: 500 @ online episode: {'avg_reward': 1.427018290758133, 'max_reward': 2.6833334088325502, 'reward_variance': 0.2960535302758217, 'coverage': 280.65, 'intra_slate_diversity': 0.7564245298504829, 'is_click_rate': 0.505859388411045, 'is_like_rate': 0.4659505307674408, 'is_star_rate': 0.4552083447575569} @ training: {'loss': 0.07108963504433632, 'TB_loss': 0.07108963504433632}
+
+Episode step 520, time diff 2.6856002807617188, total time diff 65.57851314544678)
+step: 520 @ online episode: {'avg_reward': 1.4178385972976684, 'max_reward': 2.6500000953674316, 'reward_variance': 0.29168736189603806, 'coverage': 283.35, 'intra_slate_diversity': 0.7529598698019981, 'is_click_rate': 0.5092448085546494, 'is_like_rate': 0.4597656399011612, 'is_star_rate': 0.4488281399011612} @ training: {'loss': 0.07468768768012524, 'TB_loss': 0.07468768768012524}
+
+Episode step 540, time diff 2.699908494949341, total time diff 68.2641134262085)
+step: 540 @ online episode: {'avg_reward': 1.3703125417232513, 'max_reward': 2.6666667342185972, 'reward_variance': 0.30321660190820693, 'coverage': 292.4, 'intra_slate_diversity': 0.757827989757061, 'is_click_rate': 0.49205730855464935, 'is_like_rate': 0.4510416775941849, 'is_star_rate': 0.4272135511040688} @ training: {'loss': 0.07752969302237034, 'TB_loss': 0.07752969302237034}
+
+Episode step 560, time diff 2.7778756618499756, total time diff 70.96402192115784)
+step: 560 @ online episode: {'avg_reward': 1.4444010972976684, 'max_reward': 2.6750000715255737, 'reward_variance': 0.2876081824302673, 'coverage': 272.85, 'intra_slate_diversity': 0.7493951253592968, 'is_click_rate': 0.522526067495346, 'is_like_rate': 0.473502616584301, 'is_star_rate': 0.4483724057674408} @ training: {'loss': 0.062097681872546676, 'TB_loss': 0.062097681872546676}
+
+Episode step 580, time diff 2.910266876220703, total time diff 73.74189758300781)
+step: 580 @ online episode: {'avg_reward': 1.472851610183716, 'max_reward': 2.758333432674408, 'reward_variance': 0.30137139484286307, 'coverage': 257.45, 'intra_slate_diversity': 0.7409930236637592, 'is_click_rate': 0.5264323055744171, 'is_like_rate': 0.48307292759418485, 'is_star_rate': 0.463346366584301} @ training: {'loss': 0.06617178153246642, 'TB_loss': 0.06617178153246642}
+
+Episode step 600, time diff 2.372779130935669, total time diff 76.65216445922852)
+step: 600 @ online episode: {'avg_reward': 1.5434245467185974, 'max_reward': 2.7750001072883608, 'reward_variance': 0.30754363909363747, 'coverage': 247.4, 'intra_slate_diversity': 0.7365820497274399, 'is_click_rate': 0.5501302316784858, 'is_like_rate': 0.5100911647081375, 'is_star_rate': 0.4832031399011612} @ training: {'loss': 0.05994492620229721, 'TB_loss': 0.05994492620229721}
+
+Episode step 620, time diff 2.617396593093872, total time diff 79.02494359016418)
+step: 620 @ online episode: {'avg_reward': 1.5697917282581328, 'max_reward': 2.708333420753479, 'reward_variance': 0.2914180599153042, 'coverage': 250.65, 'intra_slate_diversity': 0.736866258084774, 'is_click_rate': 0.5654297024011612, 'is_like_rate': 0.5132812663912774, 'is_star_rate': 0.4910807371139526} @ training: {'loss': 0.056895963847637177, 'TB_loss': 0.056895963847637177}
+
+Episode step 640, time diff 2.3213484287261963, total time diff 81.64234018325806)
+step: 640 @ online episode: {'avg_reward': 1.5802735030651092, 'max_reward': 2.7750000834465025, 'reward_variance': 0.3154608964920044, 'coverage': 245.2, 'intra_slate_diversity': 0.73512042760849, 'is_click_rate': 0.5634114772081376, 'is_like_rate': 0.5147786647081375, 'is_star_rate': 0.5020833477377892} @ training: {'loss': 0.060590995103120805, 'TB_loss': 0.060590995103120805}
+
+Episode step 660, time diff 2.213383913040161, total time diff 83.96368861198425)
+step: 660 @ online episode: {'avg_reward': 1.5633464395999908, 'max_reward': 2.73333340883255, 'reward_variance': 0.30221775099635123, 'coverage': 246.55, 'intra_slate_diversity': 0.7345260858535767, 'is_click_rate': 0.5602864742279052, 'is_like_rate': 0.5134114757180214, 'is_star_rate': 0.4896484509110451} @ training: {'loss': 0.05916880089789629, 'TB_loss': 0.05916880089789629}
+
+Episode step 680, time diff 2.7231905460357666, total time diff 86.17707252502441)
+step: 680 @ online episode: {'avg_reward': 1.5451823234558106, 'max_reward': 2.70833340883255, 'reward_variance': 0.2909081630408764, 'coverage': 238.55, 'intra_slate_diversity': 0.7330172717571258, 'is_click_rate': 0.5531250238418579, 'is_like_rate': 0.5046224132180214, 'is_star_rate': 0.4874349072575569} @ training: {'loss': 0.057657247968018056, 'TB_loss': 0.057657247968018056}
+
+Episode step 700, time diff 2.3726413249969482, total time diff 88.90026307106018)
+step: 700 @ online episode: {'avg_reward': 1.5701172351837158, 'max_reward': 2.7750001072883608, 'reward_variance': 0.3012895494699478, 'coverage': 239.35, 'intra_slate_diversity': 0.7351575180888176, 'is_click_rate': 0.5593099176883698, 'is_like_rate': 0.5142578318715095, 'is_star_rate': 0.4965494990348816} @ training: {'loss': 0.059907930344343184, 'TB_loss': 0.059907930344343184}
+
+Episode step 720, time diff 2.406310558319092, total time diff 91.27290439605713)
+step: 720 @ online episode: {'avg_reward': 1.6061849534511565, 'max_reward': 2.7916667580604555, 'reward_variance': 0.3040266491472721, 'coverage': 238.5, 'intra_slate_diversity': 0.7334537446498871, 'is_click_rate': 0.5731771022081376, 'is_like_rate': 0.5264974102377892, 'is_star_rate': 0.5065104320645333} @ training: {'loss': 0.05662153828889131, 'TB_loss': 0.05662153828889131}
+
+Episode step 740, time diff 2.38655948638916, total time diff 93.67921495437622)
+step: 740 @ online episode: {'avg_reward': 1.6240234673023224, 'max_reward': 2.841666781902313, 'reward_variance': 0.2994553543627262, 'coverage': 237.3, 'intra_slate_diversity': 0.7312308356165886, 'is_click_rate': 0.5732422053813935, 'is_like_rate': 0.5347005411982536, 'is_star_rate': 0.5160807445645332} @ training: {'loss': 0.05342381875962019, 'TB_loss': 0.05342381875962019}
+
+Episode step 760, time diff 2.4081954956054688, total time diff 96.06577444076538)
+step: 760 @ online episode: {'avg_reward': 1.5990885972976685, 'max_reward': 2.8083334445953367, 'reward_variance': 0.3011816404759884, 'coverage': 239.85, 'intra_slate_diversity': 0.7316710323095321, 'is_click_rate': 0.5701172053813934, 'is_like_rate': 0.5236979335546493, 'is_star_rate': 0.5052734538912773} @ training: {'loss': 0.05358817055821419, 'TB_loss': 0.05358817055821419}
+
+Episode step 780, time diff 2.8736186027526855, total time diff 98.47396993637085)
+step: 780 @ online episode: {'avg_reward': 1.5919922411441803, 'max_reward': 2.8000001192092894, 'reward_variance': 0.3021352171897888, 'coverage': 235.5, 'intra_slate_diversity': 0.7302732482552529, 'is_click_rate': 0.5674479395151139, 'is_like_rate': 0.5227213755249978, 'is_star_rate': 0.5018229365348816} @ training: {'loss': 0.058508288115262985, 'TB_loss': 0.058508288115262985}
+
+Episode step 800, time diff 2.468179702758789, total time diff 101.34758853912354)
+step: 800 @ online episode: {'avg_reward': 1.5671224564313888, 'max_reward': 2.7416667461395265, 'reward_variance': 0.29413543567061423, 'coverage': 252.0, 'intra_slate_diversity': 0.7306004486978054, 'is_click_rate': 0.5539713740348816, 'is_like_rate': 0.5178385570645332, 'is_star_rate': 0.4953125223517418} @ training: {'loss': 0.06391640901565551, 'TB_loss': 0.06391640901565551}
+
+Episode step 820, time diff 3.1608757972717285, total time diff 103.81576824188232)
+step: 820 @ online episode: {'avg_reward': 1.658463591337204, 'max_reward': 2.8416667699813845, 'reward_variance': 0.3222265146672726, 'coverage': 221.95, 'intra_slate_diversity': 0.7240867719054223, 'is_click_rate': 0.5869791895151139, 'is_like_rate': 0.5431640893220901, 'is_star_rate': 0.5283203303813935} @ training: {'loss': 0.05418743286281824, 'TB_loss': 0.05418743286281824}
+
+Episode step 840, time diff 2.5165023803710938, total time diff 106.97664403915405)
+step: 840 @ online episode: {'avg_reward': 1.6032552599906922, 'max_reward': 2.766666758060455, 'reward_variance': 0.2840221531689167, 'coverage': 233.2, 'intra_slate_diversity': 0.7328106582164764, 'is_click_rate': 0.5733073145151139, 'is_like_rate': 0.5291666835546494, 'is_star_rate': 0.5007812663912773} @ training: {'loss': 0.050967452116310596, 'TB_loss': 0.050967452116310596}
+
+Episode step 860, time diff 2.479572057723999, total time diff 109.49314641952515)
+step: 860 @ online episode: {'avg_reward': 1.6705729901790618, 'max_reward': 2.7750001192092895, 'reward_variance': 0.29029181227087975, 'coverage': 223.3, 'intra_slate_diversity': 0.7235149264335632, 'is_click_rate': 0.5920573085546493, 'is_like_rate': 0.5556640833616256, 'is_star_rate': 0.5228515833616256} @ training: {'loss': 0.04926456212997436, 'TB_loss': 0.04926456212997436}
+
+Episode step 880, time diff 2.6627283096313477, total time diff 111.97271847724915)
+step: 880 @ online episode: {'avg_reward': 1.6618490159511565, 'max_reward': 2.841666781902313, 'reward_variance': 0.3097053237259388, 'coverage': 223.15, 'intra_slate_diversity': 0.7215833336114883, 'is_click_rate': 0.5932942867279053, 'is_like_rate': 0.5490885630249978, 'is_star_rate': 0.5194661647081376} @ training: {'loss': 0.05093441102653742, 'TB_loss': 0.05093441102653742}
+
+Episode step 900, time diff 2.5027518272399902, total time diff 114.6354467868805)
+step: 900 @ online episode: {'avg_reward': 1.6542318284511566, 'max_reward': 2.791666769981384, 'reward_variance': 0.3014689557254314, 'coverage': 222.2, 'intra_slate_diversity': 0.7211635023355484, 'is_click_rate': 0.5929036617279053, 'is_like_rate': 0.5443359568715096, 'is_star_rate': 0.516992200911045} @ training: {'loss': 0.04933917876332998, 'TB_loss': 0.04933917876332998}
+
+Episode step 920, time diff 2.7386319637298584, total time diff 117.13819861412048)
+step: 920 @ online episode: {'avg_reward': 1.6447266221046448, 'max_reward': 2.8416667580604553, 'reward_variance': 0.31475841253995895, 'coverage': 227.35, 'intra_slate_diversity': 0.7228911921381951, 'is_click_rate': 0.5839843988418579, 'is_like_rate': 0.5447916820645332, 'is_star_rate': 0.5159505426883697} @ training: {'loss': 0.05012876335531473, 'TB_loss': 0.05012876335531473}
+
+Episode step 940, time diff 2.55973482131958, total time diff 119.87683057785034)
+step: 940 @ online episode: {'avg_reward': 1.6425781786441802, 'max_reward': 2.808333456516266, 'reward_variance': 0.29588274136185644, 'coverage': 228.55, 'intra_slate_diversity': 0.7210665747523308, 'is_click_rate': 0.5868489742279053, 'is_like_rate': 0.5395833566784859, 'is_star_rate': 0.5161458536982536} @ training: {'loss': 0.049222674779593946, 'TB_loss': 0.049222674779593946}
+
+Episode step 960, time diff 2.7023050785064697, total time diff 122.43656539916992)
+step: 960 @ online episode: {'avg_reward': 1.7024089097976685, 'max_reward': 2.8166667819023132, 'reward_variance': 0.29722984731197355, 'coverage': 219.4, 'intra_slate_diversity': 0.7158345103263855, 'is_click_rate': 0.6081380426883698, 'is_like_rate': 0.5625000208616256, 'is_star_rate': 0.5317708522081375} @ training: {'loss': 0.046684867795556785, 'TB_loss': 0.046684867795556785}
+
+Episode step 980, time diff 3.084026336669922, total time diff 125.13887047767639)
+step: 980 @ online episode: {'avg_reward': 1.6605469286441803, 'max_reward': 2.783333456516266, 'reward_variance': 0.2939578130841255, 'coverage': 238.75, 'intra_slate_diversity': 0.7184778928756714, 'is_click_rate': 0.5921224132180214, 'is_like_rate': 0.5434244960546494, 'is_star_rate': 0.5250000178813934} @ training: {'loss': 0.0568330155685544, 'TB_loss': 0.0568330155685544}
+
+Episode step 1000, time diff 2.6868984699249268, total time diff 128.2228968143463)
+step: 1000 @ online episode: {'avg_reward': 1.6804688215255736, 'max_reward': 2.8000001072883607, 'reward_variance': 0.29668415933847425, 'coverage': 208.55, 'intra_slate_diversity': 0.7156387850642204, 'is_click_rate': 0.5986979365348816, 'is_like_rate': 0.5547526240348816, 'is_star_rate': 0.5270182445645333} @ training: {'loss': 0.049942655861377715, 'TB_loss': 0.049942655861377715}
+
+Episode step 1020, time diff 2.8414158821105957, total time diff 130.90979528427124)
+step: 1020 @ online episode: {'avg_reward': 1.7061849653720855, 'max_reward': 2.8000001192092894, 'reward_variance': 0.2988521486520767, 'coverage': 203.7, 'intra_slate_diversity': 0.7126926064491272, 'is_click_rate': 0.6168619990348816, 'is_like_rate': 0.5598958536982537, 'is_star_rate': 0.5294271036982536} @ training: {'loss': 0.0475639833137393, 'TB_loss': 0.0475639833137393}
+
+Episode step 1040, time diff 2.826885223388672, total time diff 133.75121116638184)
+step: 1040 @ online episode: {'avg_reward': 1.7238932847976685, 'max_reward': 2.808333456516266, 'reward_variance': 0.30288605466485025, 'coverage': 207.05, 'intra_slate_diversity': 0.7119350329041481, 'is_click_rate': 0.6151692926883697, 'is_like_rate': 0.5677083522081375, 'is_star_rate': 0.5410156458616256} @ training: {'loss': 0.04634047914296389, 'TB_loss': 0.04634047914296389}
+
+Episode step 1060, time diff 2.542853832244873, total time diff 136.5780963897705)
+step: 1060 @ online episode: {'avg_reward': 1.684114646911621, 'max_reward': 2.808333456516266, 'reward_variance': 0.30947652012109755, 'coverage': 214.15, 'intra_slate_diversity': 0.7137378439307213, 'is_click_rate': 0.5938151210546494, 'is_like_rate': 0.553841170668602, 'is_star_rate': 0.5364583447575569} @ training: {'loss': 0.049263357371091845, 'TB_loss': 0.049263357371091845}
+
+Episode step 1080, time diff 2.8383145332336426, total time diff 139.12095022201538)
+step: 1080 @ online episode: {'avg_reward': 1.695638072490692, 'max_reward': 2.8250001072883606, 'reward_variance': 0.3062154158949852, 'coverage': 216.05, 'intra_slate_diversity': 0.7125307187438011, 'is_click_rate': 0.606380233168602, 'is_like_rate': 0.5600911676883698, 'is_star_rate': 0.5291666835546494} @ training: {'loss': 0.048020434007048605, 'TB_loss': 0.048020434007048605}
+
+Episode step 1100, time diff 2.6120193004608154, total time diff 141.95926475524902)
+step: 1100 @ online episode: {'avg_reward': 1.6820313096046449, 'max_reward': 2.783333456516266, 'reward_variance': 0.2951648816466331, 'coverage': 212.7, 'intra_slate_diversity': 0.7121190384030343, 'is_click_rate': 0.5956380397081376, 'is_like_rate': 0.5571614742279053, 'is_star_rate': 0.5292317926883697} @ training: {'loss': 0.048175500333309175, 'TB_loss': 0.048175500333309175}
+
+Episode step 1120, time diff 2.5095934867858887, total time diff 144.57128405570984)
+step: 1120 @ online episode: {'avg_reward': 1.7255860090255737, 'max_reward': 2.833333432674408, 'reward_variance': 0.2932111628353596, 'coverage': 209.5, 'intra_slate_diversity': 0.7139398798346519, 'is_click_rate': 0.6130859583616257, 'is_like_rate': 0.5682291865348816, 'is_star_rate': 0.5442708522081375} @ training: {'loss': 0.04413555078208446, 'TB_loss': 0.04413555078208446}
+
+Episode step 1140, time diff 2.4135897159576416, total time diff 147.08087754249573)
+step: 1140 @ online episode: {'avg_reward': 1.7123047471046449, 'max_reward': 2.8583334565162657, 'reward_variance': 0.3058963879942894, 'coverage': 205.6, 'intra_slate_diversity': 0.7079019144177436, 'is_click_rate': 0.6014323174953461, 'is_like_rate': 0.5671224176883698, 'is_star_rate': 0.5437500223517417} @ training: {'loss': 0.0468110871501267, 'TB_loss': 0.0468110871501267}
+
+Episode step 1160, time diff 2.6777760982513428, total time diff 149.49446725845337)
+step: 1160 @ online episode: {'avg_reward': 1.6856771469116212, 'max_reward': 2.816666769981384, 'reward_variance': 0.28557764962315557, 'coverage': 235.35, 'intra_slate_diversity': 0.7171454966068268, 'is_click_rate': 0.6012369930744171, 'is_like_rate': 0.5542968928813934, 'is_star_rate': 0.5301432445645332} @ training: {'loss': 0.05287995655089617, 'TB_loss': 0.05287995655089617}
+
+Episode step 1180, time diff 2.6888363361358643, total time diff 152.1722433567047)
+step: 1180 @ online episode: {'avg_reward': 1.766080778837204, 'max_reward': 2.833333444595337, 'reward_variance': 0.2990560084581375, 'coverage': 198.6, 'intra_slate_diversity': 0.700196596980095, 'is_click_rate': 0.6210937649011612, 'is_like_rate': 0.5886067867279052, 'is_star_rate': 0.5563802286982537} @ training: {'loss': 0.046718901954591274, 'TB_loss': 0.046718901954591274}
+
+Episode step 1200, time diff 2.496894598007202, total time diff 154.86107969284058)
+step: 1200 @ online episode: {'avg_reward': 1.7712240278720857, 'max_reward': 2.8500001192092896, 'reward_variance': 0.3182768657803535, 'coverage': 200.75, 'intra_slate_diversity': 0.6989602670073509, 'is_click_rate': 0.6272135555744172, 'is_like_rate': 0.5805989801883698, 'is_star_rate': 0.563411471247673} @ training: {'loss': 0.04730281885713339, 'TB_loss': 0.04730281885713339}
+
+Episode step 1220, time diff 2.459775447845459, total time diff 157.35797429084778)
+step: 1220 @ online episode: {'avg_reward': 1.8105469346046448, 'max_reward': 2.8916667699813843, 'reward_variance': 0.3084169141948223, 'coverage': 199.05, 'intra_slate_diversity': 0.6988874599337578, 'is_click_rate': 0.6367187708616256, 'is_like_rate': 0.5932291835546494, 'is_star_rate': 0.580598983168602} @ training: {'loss': 0.04103188998997211, 'TB_loss': 0.04103188998997211}
+
+Episode step 1240, time diff 2.450075387954712, total time diff 159.81774973869324)
+step: 1240 @ online episode: {'avg_reward': 1.7675131142139435, 'max_reward': 2.8916667699813843, 'reward_variance': 0.3006704516708851, 'coverage': 200.5, 'intra_slate_diversity': 0.6999579042196273, 'is_click_rate': 0.617513045668602, 'is_like_rate': 0.5868489742279053, 'is_star_rate': 0.5631510645151139} @ training: {'loss': 0.04244513744488358, 'TB_loss': 0.04244513744488358}
+
+Episode step 1260, time diff 2.525892734527588, total time diff 162.26782512664795)
+step: 1260 @ online episode: {'avg_reward': 1.7623047351837158, 'max_reward': 2.808333468437195, 'reward_variance': 0.294648240506649, 'coverage': 200.75, 'intra_slate_diversity': 0.7048092648386955, 'is_click_rate': 0.6194010615348816, 'is_like_rate': 0.5825521051883698, 'is_star_rate': 0.5603515893220902} @ training: {'loss': 0.04291667714715004, 'TB_loss': 0.04291667714715004}
+
+Episode step 1280, time diff 3.026141881942749, total time diff 164.79371786117554)
+step: 1280 @ online episode: {'avg_reward': 1.778580802679062, 'max_reward': 2.8750000834465026, 'reward_variance': 0.3049758799374104, 'coverage': 202.85, 'intra_slate_diversity': 0.7044911816716194, 'is_click_rate': 0.6251302301883698, 'is_like_rate': 0.5871744990348816, 'is_star_rate': 0.5662760674953461} @ training: {'loss': 0.04447950795292854, 'TB_loss': 0.04447950795292854}
+
+Episode step 1300, time diff 2.688006639480591, total time diff 167.8198597431183)
+step: 1300 @ online episode: {'avg_reward': 1.7751953840255736, 'max_reward': 2.883333432674408, 'reward_variance': 0.2900119997560978, 'coverage': 199.05, 'intra_slate_diversity': 0.7007961258292198, 'is_click_rate': 0.6266927272081375, 'is_like_rate': 0.5861328363418579, 'is_star_rate': 0.5623698085546494} @ training: {'loss': 0.04050100492313504, 'TB_loss': 0.04050100492313504}
+
+Episode step 1320, time diff 2.6555211544036865, total time diff 170.50786638259888)
+step: 1320 @ online episode: {'avg_reward': 1.8031250774860381, 'max_reward': 2.858333444595337, 'reward_variance': 0.27534639462828636, 'coverage': 199.2, 'intra_slate_diversity': 0.6969178169965744, 'is_click_rate': 0.6394531428813934, 'is_like_rate': 0.5956380426883697, 'is_star_rate': 0.5680338740348816} @ training: {'loss': 0.038924659602344036, 'TB_loss': 0.038924659602344036}
+
+Episode step 1340, time diff 2.6688477993011475, total time diff 173.16338753700256)
+step: 1340 @ online episode: {'avg_reward': 1.7354818284511566, 'max_reward': 2.8250001072883606, 'reward_variance': 0.3202859550714493, 'coverage': 203.3, 'intra_slate_diversity': 0.6983434513211251, 'is_click_rate': 0.6266276240348816, 'is_like_rate': 0.569270858168602, 'is_star_rate': 0.5395833551883698} @ training: {'loss': 0.04412452671676874, 'TB_loss': 0.04412452671676874}
+
+Episode step 1360, time diff 2.684702157974243, total time diff 175.8322353363037)
+step: 1360 @ online episode: {'avg_reward': 1.7096354722976685, 'max_reward': 2.8166667938232424, 'reward_variance': 0.30305496156215667, 'coverage': 221.25, 'intra_slate_diversity': 0.6981269955635071, 'is_click_rate': 0.605143241584301, 'is_like_rate': 0.5639323115348815, 'is_star_rate': 0.5405599176883698} @ training: {'loss': 0.058877923898398875, 'TB_loss': 0.058877923898398875}
+
+Episode step 1380, time diff 2.9529964923858643, total time diff 178.51693749427795)
+step: 1380 @ online episode: {'avg_reward': 1.8299479901790618, 'max_reward': 2.858333432674408, 'reward_variance': 0.28578595295548437, 'coverage': 183.4, 'intra_slate_diversity': 0.6881355732679367, 'is_click_rate': 0.653255233168602, 'is_like_rate': 0.6012370020151139, 'is_star_rate': 0.5754557460546493} @ training: {'loss': 0.04081915263086557, 'TB_loss': 0.04081915263086557}
+
+Episode step 1400, time diff 2.5750410556793213, total time diff 181.46993398666382)
+step: 1400 @ online episode: {'avg_reward': 1.8318360209465028, 'max_reward': 2.8750001072883604, 'reward_variance': 0.285974008589983, 'coverage': 183.1, 'intra_slate_diversity': 0.6879639104008675, 'is_click_rate': 0.6432291775941849, 'is_like_rate': 0.6070312678813934, 'is_star_rate': 0.5815755426883698} @ training: {'loss': 0.03906679609790444, 'TB_loss': 0.03906679609790444}
+
+Episode step 1420, time diff 2.6520369052886963, total time diff 184.04497504234314)
+step: 1420 @ online episode: {'avg_reward': 1.8566406965255737, 'max_reward': 2.883333444595337, 'reward_variance': 0.2802179239690304, 'coverage': 182.45, 'intra_slate_diversity': 0.6875397071242333, 'is_click_rate': 0.6566406488418579, 'is_like_rate': 0.6167317897081375, 'is_star_rate': 0.5832682490348816} @ training: {'loss': 0.036854999326169494, 'TB_loss': 0.036854999326169494}
+
+Episode step 1440, time diff 2.52066707611084, total time diff 186.69701194763184)
+step: 1440 @ online episode: {'avg_reward': 1.7933594346046449, 'max_reward': 2.858333432674408, 'reward_variance': 0.2931710951030254, 'coverage': 206.15, 'intra_slate_diversity': 0.6901973232626915, 'is_click_rate': 0.6352213710546494, 'is_like_rate': 0.5919922083616257, 'is_star_rate': 0.5661458492279052} @ training: {'loss': 0.05360832586884499, 'TB_loss': 0.05360832586884499}
+
+Episode step 1460, time diff 2.4331154823303223, total time diff 189.21767902374268)
+step: 1460 @ online episode: {'avg_reward': 1.855794322490692, 'max_reward': 2.8750001072883604, 'reward_variance': 0.29956317618489264, 'coverage': 179.1, 'intra_slate_diversity': 0.6839679539203644, 'is_click_rate': 0.6576172083616256, 'is_like_rate': 0.6145182490348816, 'is_star_rate': 0.5836588710546493} @ training: {'loss': 0.040864987578243014, 'TB_loss': 0.040864987578243014}
+
+Episode step 1480, time diff 2.9625720977783203, total time diff 191.650794506073)
+step: 1480 @ online episode: {'avg_reward': 1.8122396409511565, 'max_reward': 2.875000071525574, 'reward_variance': 0.27502581998705866, 'coverage': 183.05, 'intra_slate_diversity': 0.6893141403794288, 'is_click_rate': 0.6361328333616256, 'is_like_rate': 0.600651067495346, 'is_star_rate': 0.5754557579755784} @ training: {'loss': 0.03723462112247944, 'TB_loss': 0.03723462112247944}
+
+Episode step 1500, time diff 2.3664443492889404, total time diff 194.61336660385132)
+step: 1500 @ online episode: {'avg_reward': 1.828320360183716, 'max_reward': 2.850000095367432, 'reward_variance': 0.2938485346734524, 'coverage': 182.25, 'intra_slate_diversity': 0.6863163039088249, 'is_click_rate': 0.6452474176883698, 'is_like_rate': 0.6057291924953461, 'is_star_rate': 0.5773437678813934} @ training: {'loss': 0.03829944469034672, 'TB_loss': 0.03829944469034672}
+
+Episode step 1520, time diff 2.498749017715454, total time diff 196.97981095314026)
+step: 1520 @ online episode: {'avg_reward': 1.8223958909511566, 'max_reward': 2.8583334565162657, 'reward_variance': 0.29456937983632087, 'coverage': 184.3, 'intra_slate_diversity': 0.6865193486213684, 'is_click_rate': 0.6468099176883697, 'is_like_rate': 0.6011718928813934, 'is_star_rate': 0.5744140803813934} @ training: {'loss': 0.03961519282311201, 'TB_loss': 0.03961519282311201}
+
+Episode step 1540, time diff 2.3656089305877686, total time diff 199.4785599708557)
+step: 1540 @ online episode: {'avg_reward': 1.8116536915302277, 'max_reward': 2.85833340883255, 'reward_variance': 0.29041270166635513, 'coverage': 206.9, 'intra_slate_diversity': 0.688420656323433, 'is_click_rate': 0.6404297113418579, 'is_like_rate': 0.6009114861488343, 'is_star_rate': 0.5703125119209289} @ training: {'loss': 0.05335976267233491, 'TB_loss': 0.05335976267233491}
+
+Episode step 1560, time diff 2.3304080963134766, total time diff 201.84416890144348)
+step: 1560 @ online episode: {'avg_reward': 1.8542969584465028, 'max_reward': 2.875000071525574, 'reward_variance': 0.31047034114599226, 'coverage': 174.3, 'intra_slate_diversity': 0.6775383621454238, 'is_click_rate': 0.660286483168602, 'is_like_rate': 0.6059896022081375, 'is_star_rate': 0.5880208551883698} @ training: {'loss': 0.040202060528099534, 'TB_loss': 0.040202060528099534}
+
+Episode step 1580, time diff 3.0729174613952637, total time diff 204.17457699775696)
+step: 1580 @ online episode: {'avg_reward': 1.853385478258133, 'max_reward': 2.90833340883255, 'reward_variance': 0.2946982175111771, 'coverage': 177.3, 'intra_slate_diversity': 0.6827820345759392, 'is_click_rate': 0.6570963770151138, 'is_like_rate': 0.6078776240348815, 'is_star_rate': 0.5884114772081375} @ training: {'loss': 0.04229544959962368, 'TB_loss': 0.04229544959962368}
+
+Episode step 1600, time diff 2.675992965698242, total time diff 207.24749445915222)
+step: 1600 @ online episode: {'avg_reward': 1.836067759990692, 'max_reward': 2.858333444595337, 'reward_variance': 0.2894268289208412, 'coverage': 177.15, 'intra_slate_diversity': 0.684271490573883, 'is_click_rate': 0.6455729395151139, 'is_like_rate': 0.6095703303813934, 'is_star_rate': 0.5809244975447655} @ training: {'loss': 0.03841904010623694, 'TB_loss': 0.03841904010623694}
+
+Episode step 1620, time diff 2.7352912425994873, total time diff 209.92348742485046)
+step: 1620 @ online episode: {'avg_reward': 1.7811198592185975, 'max_reward': 2.83333340883255, 'reward_variance': 0.2976364493370056, 'coverage': 201.7, 'intra_slate_diversity': 0.6856027469038963, 'is_click_rate': 0.6319661647081375, 'is_like_rate': 0.582161471247673, 'is_star_rate': 0.5669922083616257} @ training: {'loss': 0.04941106410697103, 'TB_loss': 0.04941106410697103}
+
+Episode step 1640, time diff 2.597320318222046, total time diff 212.65877866744995)
+step: 1640 @ online episode: {'avg_reward': 1.8608724653720856, 'max_reward': 2.8750000953674317, 'reward_variance': 0.2927983209490776, 'coverage': 179.9, 'intra_slate_diversity': 0.6798492193222045, 'is_click_rate': 0.6545573174953461, 'is_like_rate': 0.616731795668602, 'is_star_rate': 0.5895833536982537} @ training: {'loss': 0.039820002391934395, 'TB_loss': 0.039820002391934395}
+
+Episode step 1660, time diff 2.5380895137786865, total time diff 215.256098985672)
+step: 1660 @ online episode: {'avg_reward': 1.8134766399860383, 'max_reward': 2.8750000953674317, 'reward_variance': 0.3189401224255562, 'coverage': 181.6, 'intra_slate_diversity': 0.6827297583222389, 'is_click_rate': 0.6419270992279053, 'is_like_rate': 0.5932291865348815, 'is_star_rate': 0.5783203303813934} @ training: {'loss': 0.04308065678924322, 'TB_loss': 0.04308065678924322}
+
+Episode step 1680, time diff 2.725315570831299, total time diff 217.79418849945068)
+step: 1680 @ online episode: {'avg_reward': 1.877408927679062, 'max_reward': 2.891666758060455, 'reward_variance': 0.2994273342192173, 'coverage': 179.95, 'intra_slate_diversity': 0.6754517585039139, 'is_click_rate': 0.6632161676883698, 'is_like_rate': 0.6221354365348816, 'is_star_rate': 0.5920573085546493} @ training: {'loss': 0.038926092069596054, 'TB_loss': 0.038926092069596054}
+
+Episode step 1700, time diff 2.471863031387329, total time diff 220.51950407028198)
+step: 1700 @ online episode: {'avg_reward': 1.836393302679062, 'max_reward': 2.8666667699813844, 'reward_variance': 0.3071246571838856, 'coverage': 180.75, 'intra_slate_diversity': 0.6797612696886063, 'is_click_rate': 0.6519531399011612, 'is_like_rate': 0.6076172083616257, 'is_star_rate': 0.5768229335546493} @ training: {'loss': 0.03965953532606363, 'TB_loss': 0.03965953532606363}
+
+Episode step 1720, time diff 2.5815045833587646, total time diff 222.9913671016693)
+step: 1720 @ online episode: {'avg_reward': 1.7993490099906921, 'max_reward': 2.858333432674408, 'reward_variance': 0.30309836715459826, 'coverage': 207.1, 'intra_slate_diversity': 0.6872419238090515, 'is_click_rate': 0.6286458551883698, 'is_like_rate': 0.5966146007180214, 'is_star_rate': 0.5740885615348816} @ training: {'loss': 0.048091040924191475, 'TB_loss': 0.048091040924191475}
+
+Episode step 1740, time diff 2.6119489669799805, total time diff 225.57287168502808)
+step: 1740 @ online episode: {'avg_reward': 1.8701172769069672, 'max_reward': 2.9166667461395264, 'reward_variance': 0.2708148121833801, 'coverage': 173.2, 'intra_slate_diversity': 0.6758175358176232, 'is_click_rate': 0.6605468928813935, 'is_like_rate': 0.6207031399011612, 'is_star_rate': 0.5888672053813935} @ training: {'loss': 0.035672640707343814, 'TB_loss': 0.035672640707343814}
+
+Episode step 1760, time diff 2.4325876235961914, total time diff 228.18482065200806)
+step: 1760 @ online episode: {'avg_reward': 1.8310547530651093, 'max_reward': 2.9166667461395264, 'reward_variance': 0.3035922825336456, 'coverage': 178.85, 'intra_slate_diversity': 0.6804114818572998, 'is_click_rate': 0.6457031428813934, 'is_like_rate': 0.6050130426883698, 'is_star_rate': 0.5803385570645332} @ training: {'loss': 0.039252670016139746, 'TB_loss': 0.039252670016139746}
+
+Episode step 1780, time diff 2.744206428527832, total time diff 230.61740827560425)
+step: 1780 @ online episode: {'avg_reward': 1.8330078780651093, 'max_reward': 2.8583334565162657, 'reward_variance': 0.3074459031224251, 'coverage': 178.05, 'intra_slate_diversity': 0.6799227386713028, 'is_click_rate': 0.6500000208616257, 'is_like_rate': 0.6086588740348816, 'is_star_rate': 0.5743489742279053} @ training: {'loss': 0.037255081348121166, 'TB_loss': 0.037255081348121166}
+
+Episode step 1800, time diff 2.4321117401123047, total time diff 233.36161470413208)
+step: 1800 @ online episode: {'avg_reward': 1.8494141340255736, 'max_reward': 2.8666667699813844, 'reward_variance': 0.309845532476902, 'coverage': 178.95, 'intra_slate_diversity': 0.6769721448421478, 'is_click_rate': 0.6458984553813935, 'is_like_rate': 0.6112630426883697, 'is_star_rate': 0.5922526270151138} @ training: {'loss': 0.0378202011808753, 'TB_loss': 0.0378202011808753}
+
+Episode step 1820, time diff 2.5622336864471436, total time diff 235.79372644424438)
+step: 1820 @ online episode: {'avg_reward': 1.8419922411441803, 'max_reward': 2.90833340883255, 'reward_variance': 0.2956938326358795, 'coverage': 184.05, 'intra_slate_diversity': 0.6808052107691764, 'is_click_rate': 0.6470703303813934, 'is_like_rate': 0.6089843928813934, 'is_star_rate': 0.5859375178813935} @ training: {'loss': 0.037809681799262765, 'TB_loss': 0.037809681799262765}
+
+Episode step 1840, time diff 2.397935628890991, total time diff 238.35596013069153)
+step: 1840 @ online episode: {'avg_reward': 1.82864590883255, 'max_reward': 2.858333444595337, 'reward_variance': 0.30642773360013964, 'coverage': 182.1, 'intra_slate_diversity': 0.6796213805675506, 'is_click_rate': 0.6421224147081375, 'is_like_rate': 0.6048828303813935, 'is_star_rate': 0.5816406428813934} @ training: {'loss': 0.038618885725736615, 'TB_loss': 0.038618885725736615}
+
+Episode step 1860, time diff 2.3676962852478027, total time diff 240.75389575958252)
+step: 1860 @ online episode: {'avg_reward': 1.8548177659511567, 'max_reward': 2.8916667699813843, 'reward_variance': 0.29863864853978156, 'coverage': 184.6, 'intra_slate_diversity': 0.6809220418334008, 'is_click_rate': 0.6565755367279053, 'is_like_rate': 0.6137369930744171, 'is_star_rate': 0.5845052242279053} @ training: {'loss': 0.035182743519544604, 'TB_loss': 0.035182743519544604}
+
+Episode step 1880, time diff 2.6802568435668945, total time diff 243.12159204483032)
+step: 1880 @ online episode: {'avg_reward': 1.7976563185453416, 'max_reward': 2.8416667342185975, 'reward_variance': 0.29513463377952576, 'coverage': 203.05, 'intra_slate_diversity': 0.681720020622015, 'is_click_rate': 0.6371745049953461, 'is_like_rate': 0.588476586341858, 'is_star_rate': 0.5720052257180214} @ training: {'loss': 0.05742100104689598, 'TB_loss': 0.05742100104689598}
+
+Episode step 1900, time diff 2.5011048316955566, total time diff 245.80184888839722)
+step: 1900 @ online episode: {'avg_reward': 1.9054688155651092, 'max_reward': 2.8666667580604552, 'reward_variance': 0.2714990898966789, 'coverage': 176.35, 'intra_slate_diversity': 0.6764460116624832, 'is_click_rate': 0.6717448055744171, 'is_like_rate': 0.6338541865348816, 'is_star_rate': 0.5998698145151138} @ training: {'loss': 0.03740191562101245, 'TB_loss': 0.03740191562101245}
+
+Episode step 1920, time diff 2.5712599754333496, total time diff 248.30295372009277)
+step: 1920 @ online episode: {'avg_reward': 1.8526042342185973, 'max_reward': 2.9000000834465025, 'reward_variance': 0.3210896760225296, 'coverage': 187.45, 'intra_slate_diversity': 0.682229469716549, 'is_click_rate': 0.6486328363418579, 'is_like_rate': 0.6136067837476731, 'is_star_rate': 0.5903646022081375} @ training: {'loss': 0.04083789465948939, 'TB_loss': 0.04083789465948939}
+
+Episode step 1940, time diff 2.733489513397217, total time diff 250.87421369552612)
+step: 1940 @ online episode: {'avg_reward': 1.829296922683716, 'max_reward': 2.8916667461395265, 'reward_variance': 0.3008761130273342, 'coverage': 188.3, 'intra_slate_diversity': 0.6830923363566399, 'is_click_rate': 0.6496745020151138, 'is_like_rate': 0.5995442897081376, 'is_star_rate': 0.5800781458616256} @ training: {'loss': 0.041239247936755416, 'TB_loss': 0.041239247936755416}
+
+Episode step 1960, time diff 2.6716833114624023, total time diff 253.60770320892334)
+step: 1960 @ online episode: {'avg_reward': 1.8134766340255737, 'max_reward': 2.8750001072883604, 'reward_variance': 0.2999645575881004, 'coverage': 188.1, 'intra_slate_diversity': 0.6780747503042222, 'is_click_rate': 0.6443359613418579, 'is_like_rate': 0.598307317495346, 'is_star_rate': 0.5708333492279053} @ training: {'loss': 0.03999318210408091, 'TB_loss': 0.03999318210408091}
+
+Episode step 1980, time diff 2.786240816116333, total time diff 256.27938652038574)
+step: 1980 @ online episode: {'avg_reward': 1.8583985090255737, 'max_reward': 2.88333340883255, 'reward_variance': 0.30031025409698486, 'coverage': 183.45, 'intra_slate_diversity': 0.6766392081975937, 'is_click_rate': 0.651692733168602, 'is_like_rate': 0.6158854335546493, 'is_star_rate': 0.5908203333616256} @ training: {'loss': 0.03744217958301306, 'TB_loss': 0.03744217958301306}
+
+Episode step 2000, time diff 2.4477243423461914, total time diff 259.0656273365021)
+step: 2000 @ online episode: {'avg_reward': 1.8668620526790618, 'max_reward': 2.891666758060455, 'reward_variance': 0.29636298567056657, 'coverage': 189.45, 'intra_slate_diversity': 0.6793204471468925, 'is_click_rate': 0.6589843928813934, 'is_like_rate': 0.6156901240348815, 'is_star_rate': 0.5921875208616256} @ training: {'loss': 0.03753871228545904, 'TB_loss': 0.03753871228545904}
+
+Episode step 2020, time diff 2.4361379146575928, total time diff 261.51335167884827)
+step: 2020 @ online episode: {'avg_reward': 1.8654297709465026, 'max_reward': 2.8916667699813843, 'reward_variance': 0.29696807116270063, 'coverage': 189.45, 'intra_slate_diversity': 0.6788148418068886, 'is_click_rate': 0.6643880426883697, 'is_like_rate': 0.615559920668602, 'is_star_rate': 0.5854817926883698} @ training: {'loss': 0.03593167392536998, 'TB_loss': 0.03593167392536998}
+
+Episode step 2040, time diff 2.4225897789001465, total time diff 263.94948959350586)
+step: 2040 @ online episode: {'avg_reward': 1.8632162094116211, 'max_reward': 2.833333432674408, 'reward_variance': 0.2876622773706913, 'coverage': 188.0, 'intra_slate_diversity': 0.6788136288523674, 'is_click_rate': 0.6583984613418579, 'is_like_rate': 0.6151692897081376, 'is_star_rate': 0.5896484524011611} @ training: {'loss': 0.0366355967707932, 'TB_loss': 0.0366355967707932}
+
+Episode step 2060, time diff 2.4486162662506104, total time diff 266.372079372406)
+step: 2060 @ online episode: {'avg_reward': 1.8660807967185975, 'max_reward': 2.891666758060455, 'reward_variance': 0.2730934627354145, 'coverage': 189.2, 'intra_slate_diversity': 0.6804868549108505, 'is_click_rate': 0.6587890803813934, 'is_like_rate': 0.6168619960546493, 'is_star_rate': 0.590429711341858} @ training: {'loss': 0.03581089600920677, 'TB_loss': 0.03581089600920677}
+
+Episode step 2080, time diff 2.759154796600342, total time diff 268.8206956386566)
+step: 2080 @ online episode: {'avg_reward': 1.8283854842185974, 'max_reward': 2.8916667461395265, 'reward_variance': 0.3149949945509434, 'coverage': 191.6, 'intra_slate_diversity': 0.6815571248531341, 'is_click_rate': 0.6470703333616257, 'is_like_rate': 0.6049479305744171, 'is_star_rate': 0.5763672053813934} @ training: {'loss': 0.03665454117581248, 'TB_loss': 0.03665454117581248}
+
+Episode step 2100, time diff 2.3860421180725098, total time diff 271.57985043525696)
+step: 2100 @ online episode: {'avg_reward': 1.8589193165302276, 'max_reward': 2.866666793823242, 'reward_variance': 0.29605353474617, 'coverage': 193.2, 'intra_slate_diversity': 0.6838578000664711, 'is_click_rate': 0.655794283747673, 'is_like_rate': 0.6127604335546494, 'is_star_rate': 0.5903646051883698} @ training: {'loss': 0.03697764594107866, 'TB_loss': 0.03697764594107866}
+
+Episode step 2120, time diff 2.4452147483825684, total time diff 273.96589255332947)
+step: 2120 @ online episode: {'avg_reward': 1.8491537034511567, 'max_reward': 2.8750001072883604, 'reward_variance': 0.2993519701063633, 'coverage': 191.8, 'intra_slate_diversity': 0.6805536791682243, 'is_click_rate': 0.652018254995346, 'is_like_rate': 0.6107422053813935, 'is_star_rate': 0.5863932490348815} @ training: {'loss': 0.03710500318557024, 'TB_loss': 0.03710500318557024}
+
+Episode step 2140, time diff 2.571939706802368, total time diff 276.41110730171204)
+step: 2140 @ online episode: {'avg_reward': 1.84622403383255, 'max_reward': 2.9166667461395264, 'reward_variance': 0.291222408413887, 'coverage': 191.75, 'intra_slate_diversity': 0.6823420628905297, 'is_click_rate': 0.6492187678813934, 'is_like_rate': 0.6117187678813935, 'is_star_rate': 0.5852864801883697} @ training: {'loss': 0.03597040371969342, 'TB_loss': 0.03597040371969342}
+
+Episode step 2160, time diff 2.5902514457702637, total time diff 278.9830470085144)
+step: 2160 @ online episode: {'avg_reward': 1.844401127099991, 'max_reward': 2.891666758060455, 'reward_variance': 0.3039812847971916, 'coverage': 188.15, 'intra_slate_diversity': 0.6775139629840851, 'is_click_rate': 0.6524088770151139, 'is_like_rate': 0.6076823055744172, 'is_star_rate': 0.5843099147081375} @ training: {'loss': 0.03631546096876263, 'TB_loss': 0.03631546096876263}
+
+Episode step 2180, time diff 2.792402982711792, total time diff 281.57329845428467)
+step: 2180 @ online episode: {'avg_reward': 1.8583334267139435, 'max_reward': 2.900000071525574, 'reward_variance': 0.2959341749548912, 'coverage': 190.15, 'intra_slate_diversity': 0.6786667332053185, 'is_click_rate': 0.6545573115348816, 'is_like_rate': 0.6139974176883698, 'is_star_rate': 0.589778670668602} @ training: {'loss': 0.03727350989356637, 'TB_loss': 0.03727350989356637}
+
+Episode step 2200, time diff 2.4808380603790283, total time diff 284.36570143699646)
+step: 2200 @ online episode: {'avg_reward': 1.870572990179062, 'max_reward': 2.8750000953674317, 'reward_variance': 0.2859674200415611, 'coverage': 190.05, 'intra_slate_diversity': 0.6779639139771462, 'is_click_rate': 0.6609375208616257, 'is_like_rate': 0.619270858168602, 'is_star_rate': 0.5903646022081375} @ training: {'loss': 0.03561719106510282, 'TB_loss': 0.03561719106510282}
+
+Episode step 2220, time diff 2.5908823013305664, total time diff 286.8465394973755)
+step: 2220 @ online episode: {'avg_reward': 1.85852872133255, 'max_reward': 2.883333444595337, 'reward_variance': 0.2987484306097031, 'coverage': 186.95, 'intra_slate_diversity': 0.6785271257162094, 'is_click_rate': 0.6543620020151139, 'is_like_rate': 0.6133463770151139, 'is_star_rate': 0.5908203303813935} @ training: {'loss': 0.03796426989138126, 'TB_loss': 0.03796426989138126}
+
+Episode step 2240, time diff 2.5179455280303955, total time diff 289.43742179870605)
+step: 2240 @ online episode: {'avg_reward': 1.8244141280651092, 'max_reward': 2.9000000953674316, 'reward_variance': 0.3157679602503777, 'coverage': 182.4, 'intra_slate_diversity': 0.6746382281184197, 'is_click_rate': 0.641927108168602, 'is_like_rate': 0.6065104365348816, 'is_star_rate': 0.5759765803813934} @ training: {'loss': 0.03954939991235733, 'TB_loss': 0.03954939991235733}
+
+Episode step 2260, time diff 2.3803293704986572, total time diff 291.95536732673645)
+step: 2260 @ online episode: {'avg_reward': 1.8675781905651092, 'max_reward': 2.866666781902313, 'reward_variance': 0.31020856499671934, 'coverage': 184.7, 'intra_slate_diversity': 0.6748547226190567, 'is_click_rate': 0.6565104365348816, 'is_like_rate': 0.6194661766290664, 'is_star_rate': 0.5916015863418579} @ training: {'loss': 0.035388494934886695, 'TB_loss': 0.035388494934886695}
+
+Episode step 2280, time diff 2.7425074577331543, total time diff 294.3356966972351)
+step: 2280 @ online episode: {'avg_reward': 1.8923828840255736, 'max_reward': 2.8916667699813843, 'reward_variance': 0.2925749957561493, 'coverage': 183.3, 'intra_slate_diversity': 0.6750408917665481, 'is_click_rate': 0.6619791835546494, 'is_like_rate': 0.6307291865348816, 'is_star_rate': 0.5996744990348816} @ training: {'loss': 0.03391163665801287, 'TB_loss': 0.03391163665801287}
+
+Episode step 2300, time diff 2.5081255435943604, total time diff 297.07820415496826)
+step: 2300 @ online episode: {'avg_reward': 1.864713615179062, 'max_reward': 2.8916667461395265, 'reward_variance': 0.2835144832730293, 'coverage': 183.8, 'intra_slate_diversity': 0.674551072716713, 'is_click_rate': 0.6687500178813934, 'is_like_rate': 0.6166015863418579, 'is_star_rate': 0.5793619930744172} @ training: {'loss': 0.0358073309995234, 'TB_loss': 0.0358073309995234}
+
+Episode step 2320, time diff 2.487161159515381, total time diff 299.5863296985626)
+step: 2320 @ online episode: {'avg_reward': 1.8388021469116211, 'max_reward': 2.8916667699813843, 'reward_variance': 0.2919441871345043, 'coverage': 187.45, 'intra_slate_diversity': 0.6789755836129189, 'is_click_rate': 0.646679699420929, 'is_like_rate': 0.6069010585546494, 'is_star_rate': 0.5852213710546493} @ training: {'loss': 0.03694072850048542, 'TB_loss': 0.03694072850048542}
+
+Episode step 2340, time diff 2.3728771209716797, total time diff 302.073490858078)
+step: 2340 @ online episode: {'avg_reward': 1.8738281965255736, 'max_reward': 2.9000000953674316, 'reward_variance': 0.30514905601739883, 'coverage': 184.75, 'intra_slate_diversity': 0.6757249981164932, 'is_click_rate': 0.6557291895151138, 'is_like_rate': 0.6214843958616256, 'is_star_rate': 0.5966145992279053} @ training: {'loss': 0.03603128967806697, 'TB_loss': 0.03603128967806697}
+
+Episode step 2360, time diff 2.4047303199768066, total time diff 304.4463679790497)
+step: 2360 @ online episode: {'avg_reward': 1.8526693284511566, 'max_reward': 2.8750001072883604, 'reward_variance': 0.2911830209195614, 'coverage': 182.45, 'intra_slate_diversity': 0.6766558602452278, 'is_click_rate': 0.6580078274011611, 'is_like_rate': 0.6148437678813934, 'is_star_rate': 0.5798177242279052} @ training: {'loss': 0.03608243893831968, 'TB_loss': 0.03608243893831968}
+
+Episode step 2380, time diff 2.7185561656951904, total time diff 306.8510982990265)
+step: 2380 @ online episode: {'avg_reward': 1.8491537153720856, 'max_reward': 2.90833340883255, 'reward_variance': 0.29136569052934647, 'coverage': 206.45, 'intra_slate_diversity': 0.6772677659988403, 'is_click_rate': 0.6555338710546493, 'is_like_rate': 0.6108073100447655, 'is_star_rate': 0.5828125163912773} @ training: {'loss': 0.04671495901420712, 'TB_loss': 0.04671495901420712}
+
+Episode step 2400, time diff 2.4562132358551025, total time diff 309.5696544647217)
+step: 2400 @ online episode: {'avg_reward': 1.910807353258133, 'max_reward': 2.908333420753479, 'reward_variance': 0.2787070281803608, 'coverage': 175.8, 'intra_slate_diversity': 0.6704502210021019, 'is_click_rate': 0.6756510615348816, 'is_like_rate': 0.6298177272081376, 'is_star_rate': 0.6053385615348816} @ training: {'loss': 0.040570068545639514, 'TB_loss': 0.040570068545639514}
+
+Episode step 2420, time diff 2.962236166000366, total time diff 312.0258677005768)
+step: 2420 @ online episode: {'avg_reward': 1.8189453601837158, 'max_reward': 2.85833340883255, 'reward_variance': 0.2857166565954685, 'coverage': 199.35, 'intra_slate_diversity': 0.6747205331921577, 'is_click_rate': 0.6432942867279052, 'is_like_rate': 0.6057291910052299, 'is_star_rate': 0.5699218899011612} @ training: {'loss': 0.055384956300258636, 'TB_loss': 0.055384956300258636}
+
+Episode step 2440, time diff 2.547877788543701, total time diff 314.98810386657715)
+step: 2440 @ online episode: {'avg_reward': 1.9279297709465026, 'max_reward': 2.866666781902313, 'reward_variance': 0.2967201232910156, 'coverage': 164.2, 'intra_slate_diversity': 0.6622813671827317, 'is_click_rate': 0.6784505397081375, 'is_like_rate': 0.6428385674953461, 'is_star_rate': 0.606640636920929} @ training: {'loss': 0.035989234875887635, 'TB_loss': 0.035989234875887635}
+
+Episode step 2460, time diff 2.399752616882324, total time diff 317.53598165512085)
+step: 2460 @ online episode: {'avg_reward': 1.9117188096046447, 'max_reward': 2.933333396911621, 'reward_variance': 0.3081505224108696, 'coverage': 167.6, 'intra_slate_diversity': 0.6672304213047028, 'is_click_rate': 0.6662109553813934, 'is_like_rate': 0.635872420668602, 'is_star_rate': 0.6096354395151138} @ training: {'loss': 0.03817823342978954, 'TB_loss': 0.03817823342978954}
+
+Episode step 2480, time diff 2.79814076423645, total time diff 319.9357342720032)
+step: 2480 @ online episode: {'avg_reward': 1.8621094286441804, 'max_reward': 2.883333432674408, 'reward_variance': 0.2968135058879852, 'coverage': 166.0, 'intra_slate_diversity': 0.6666489586234092, 'is_click_rate': 0.6555989772081375, 'is_like_rate': 0.6157552272081375, 'is_star_rate': 0.5907552272081376} @ training: {'loss': 0.037804473750293256, 'TB_loss': 0.037804473750293256}
+
+Episode step 2500, time diff 2.388796806335449, total time diff 322.7338750362396)
+step: 2500 @ online episode: {'avg_reward': 1.921809983253479, 'max_reward': 2.891666758060455, 'reward_variance': 0.2902119241654873, 'coverage': 167.35, 'intra_slate_diversity': 0.6639813303947448, 'is_click_rate': 0.678645846247673, 'is_like_rate': 0.6404948145151138, 'is_star_rate': 0.6026692867279053} @ training: {'loss': 0.0338378231972456, 'TB_loss': 0.0338378231972456}
+
+Episode step 2520, time diff 2.5532851219177246, total time diff 325.1226718425751)
+step: 2520 @ online episode: {'avg_reward': 1.9208985090255737, 'max_reward': 2.9000000953674316, 'reward_variance': 0.2916546419262886, 'coverage': 170.6, 'intra_slate_diversity': 0.6669684603810311, 'is_click_rate': 0.6720703333616257, 'is_like_rate': 0.6337890833616256, 'is_star_rate': 0.6150390803813934} @ training: {'loss': 0.03195760119706392, 'TB_loss': 0.03195760119706392}
+
+Episode step 2540, time diff 2.6824119091033936, total time diff 327.6759569644928)
+step: 2540 @ online episode: {'avg_reward': 1.8969401597976685, 'max_reward': 2.90833340883255, 'reward_variance': 0.2924521237611771, 'coverage': 168.7, 'intra_slate_diversity': 0.662726266682148, 'is_click_rate': 0.6682942926883697, 'is_like_rate': 0.6311198055744172, 'is_star_rate': 0.5975260600447655} @ training: {'loss': 0.03409322695806623, 'TB_loss': 0.03409322695806623}
+
+Episode step 2560, time diff 2.6436688899993896, total time diff 330.3583688735962)
+step: 2560 @ online episode: {'avg_reward': 1.9372396647930146, 'max_reward': 2.9000000834465025, 'reward_variance': 0.2818632945418358, 'coverage': 166.85, 'intra_slate_diversity': 0.6636963501572609, 'is_click_rate': 0.6809896022081375, 'is_like_rate': 0.644856795668602, 'is_star_rate': 0.611393254995346} @ training: {'loss': 0.03226054925471544, 'TB_loss': 0.03226054925471544}
+
+Episode step 2580, time diff 2.8887648582458496, total time diff 333.0020377635956)
+step: 2580 @ online episode: {'avg_reward': 1.8922526717185975, 'max_reward': 2.8916667699813843, 'reward_variance': 0.2877008892595768, 'coverage': 169.6, 'intra_slate_diversity': 0.6691695466637612, 'is_click_rate': 0.6726562708616257, 'is_like_rate': 0.6295573145151139, 'is_star_rate': 0.5900390803813934} @ training: {'loss': 0.03498772848397493, 'TB_loss': 0.03498772848397493}
+
+Episode step 2600, time diff 2.4217727184295654, total time diff 335.89080262184143)
+step: 2600 @ online episode: {'avg_reward': 1.9397787272930145, 'max_reward': 2.9000000953674316, 'reward_variance': 0.28871145099401474, 'coverage': 170.35, 'intra_slate_diversity': 0.6627148121595383, 'is_click_rate': 0.6805338740348816, 'is_like_rate': 0.6408854365348816, 'is_star_rate': 0.6183593928813934} @ training: {'loss': 0.034951961133629084, 'TB_loss': 0.034951961133629084}
+
+Episode step 2620, time diff 2.9387128353118896, total time diff 338.312575340271)
+step: 2620 @ online episode: {'avg_reward': 1.8974610090255737, 'max_reward': 2.908333420753479, 'reward_variance': 0.28979225754737853, 'coverage': 167.4, 'intra_slate_diversity': 0.662979482114315, 'is_click_rate': 0.6651692926883698, 'is_like_rate': 0.6298828363418579, 'is_star_rate': 0.6024088650941849} @ training: {'loss': 0.03460255078971386, 'TB_loss': 0.03460255078971386}
+
+Episode step 2640, time diff 2.7904720306396484, total time diff 341.2512881755829)
+step: 2640 @ online episode: {'avg_reward': 1.8606771528720856, 'max_reward': 2.8750000834465026, 'reward_variance': 0.27095433697104454, 'coverage': 183.15, 'intra_slate_diversity': 0.6603467240929604, 'is_click_rate': 0.6568359598517418, 'is_like_rate': 0.6151692897081376, 'is_star_rate': 0.5886718928813934} @ training: {'loss': 0.05129107255488634, 'TB_loss': 0.05129107255488634}
+
+Episode step 2660, time diff 2.4325292110443115, total time diff 344.04176020622253)
+step: 2660 @ online episode: {'avg_reward': 1.9330078840255738, 'max_reward': 2.9250000596046446, 'reward_variance': 0.27304288670420646, 'coverage': 158.45, 'intra_slate_diversity': 0.6576813206076622, 'is_click_rate': 0.6840494990348815, 'is_like_rate': 0.6393229365348816, 'is_star_rate': 0.6096354335546493} @ training: {'loss': 0.035453290678560734, 'TB_loss': 0.035453290678560734}
+
+Episode step 2680, time diff 2.944443464279175, total time diff 346.47428941726685)
+step: 2680 @ online episode: {'avg_reward': 1.8955078721046448, 'max_reward': 2.8750001072883604, 'reward_variance': 0.30287442952394483, 'coverage': 165.95, 'intra_slate_diversity': 0.6603870272636414, 'is_click_rate': 0.6686849176883698, 'is_like_rate': 0.6240885585546494, 'is_star_rate': 0.6027343899011612} @ training: {'loss': 0.03503233268857002, 'TB_loss': 0.03503233268857002}
+
+Episode step 2700, time diff 2.78212833404541, total time diff 349.418732881546)
+step: 2700 @ online episode: {'avg_reward': 1.9127605080604553, 'max_reward': 2.908333420753479, 'reward_variance': 0.28600707501173017, 'coverage': 166.35, 'intra_slate_diversity': 0.6624247029423713, 'is_click_rate': 0.6776692867279053, 'is_like_rate': 0.6355468899011611, 'is_star_rate': 0.5995442897081376} @ training: {'loss': 0.035300344694405794, 'TB_loss': 0.035300344694405794}
+
+Episode step 2720, time diff 2.6679348945617676, total time diff 352.20086121559143)
+step: 2720 @ online episode: {'avg_reward': 1.8654297471046448, 'max_reward': 2.8500001072883605, 'reward_variance': 0.28862533420324327, 'coverage': 193.5, 'intra_slate_diversity': 0.669994230568409, 'is_click_rate': 0.6558593958616257, 'is_like_rate': 0.6173828363418579, 'is_star_rate': 0.5921875178813935} @ training: {'loss': 0.045598248671740296, 'TB_loss': 0.045598248671740296}
+
+Episode step 2740, time diff 2.7758302688598633, total time diff 354.8687961101532)
+step: 2740 @ online episode: {'avg_reward': 1.9489584028720857, 'max_reward': 2.908333420753479, 'reward_variance': 0.2893374651670456, 'coverage': 161.05, 'intra_slate_diversity': 0.656809538602829, 'is_click_rate': 0.6845703363418579, 'is_like_rate': 0.6492838799953461, 'is_star_rate': 0.6151041865348816} @ training: {'loss': 0.034638740587979555, 'TB_loss': 0.034638740587979555}
+
+Episode step 2760, time diff 2.6742467880249023, total time diff 357.64462637901306)
+step: 2760 @ online episode: {'avg_reward': 1.9720703780651092, 'max_reward': 2.9250000715255737, 'reward_variance': 0.2753413446247578, 'coverage': 157.45, 'intra_slate_diversity': 0.654319828748703, 'is_click_rate': 0.6941406458616257, 'is_like_rate': 0.6597005307674408, 'is_star_rate': 0.6182291895151139} @ training: {'loss': 0.03205237518996, 'TB_loss': 0.03205237518996}
+
+Episode step 2780, time diff 3.060857057571411, total time diff 360.31887316703796)
+step: 2780 @ online episode: {'avg_reward': 1.9634766399860382, 'max_reward': 2.9166667461395264, 'reward_variance': 0.27855503633618356, 'coverage': 156.8, 'intra_slate_diversity': 0.6540555089712143, 'is_click_rate': 0.6878906488418579, 'is_like_rate': 0.6522135585546494, 'is_star_rate': 0.6233724147081375} @ training: {'loss': 0.03170297797769308, 'TB_loss': 0.03170297797769308}
+
+Episode step 2800, time diff 2.742065906524658, total time diff 363.3797302246094)
+step: 2800 @ online episode: {'avg_reward': 1.9468750715255738, 'max_reward': 2.9166667461395264, 'reward_variance': 0.28708512485027315, 'coverage': 160.45, 'intra_slate_diversity': 0.6546046242117882, 'is_click_rate': 0.6899739801883698, 'is_like_rate': 0.6419922083616256, 'is_star_rate': 0.6149088770151139} @ training: {'loss': 0.03228364242240787, 'TB_loss': 0.03228364242240787}
+
+Episode step 2820, time diff 2.812331438064575, total time diff 366.12179613113403)
+step: 2820 @ online episode: {'avg_reward': 1.9656901776790618, 'max_reward': 2.908333420753479, 'reward_variance': 0.2881238043308258, 'coverage': 161.45, 'intra_slate_diversity': 0.6585469335317612, 'is_click_rate': 0.6868489742279053, 'is_like_rate': 0.6524739772081375, 'is_star_rate': 0.6263672024011612} @ training: {'loss': 0.030905665829777718, 'TB_loss': 0.030905665829777718}
+
+Episode step 2840, time diff 2.712709426879883, total time diff 368.9341275691986)
+step: 2840 @ online episode: {'avg_reward': 1.9365235328674317, 'max_reward': 2.883333420753479, 'reward_variance': 0.27374894320964815, 'coverage': 178.25, 'intra_slate_diversity': 0.658115028589964, 'is_click_rate': 0.6788411647081375, 'is_like_rate': 0.6457031399011612, 'is_star_rate': 0.611979179084301} @ training: {'loss': 0.04733684724196792, 'TB_loss': 0.04733684724196792}
+
+Episode step 2860, time diff 2.690171241760254, total time diff 371.6468369960785)
+step: 2860 @ online episode: {'avg_reward': 1.8641276836395264, 'max_reward': 2.858333432674408, 'reward_variance': 0.2945528879761696, 'coverage': 179.9, 'intra_slate_diversity': 0.6611879795789719, 'is_click_rate': 0.6577474147081375, 'is_like_rate': 0.617057304084301, 'is_star_rate': 0.5893229395151138} @ training: {'loss': 0.04656356703490019, 'TB_loss': 0.04656356703490019}
+
+Episode step 2880, time diff 3.2419097423553467, total time diff 374.33700823783875)
+step: 2880 @ online episode: {'avg_reward': 1.9714844346046447, 'max_reward': 2.9250000715255737, 'reward_variance': 0.288036922365427, 'coverage': 151.8, 'intra_slate_diversity': 0.6498523488640785, 'is_click_rate': 0.684309920668602, 'is_like_rate': 0.6524088740348816, 'is_star_rate': 0.6347656428813935} @ training: {'loss': 0.034296460542827846, 'TB_loss': 0.034296460542827846}
+
+Episode step 2900, time diff 2.5647294521331787, total time diff 377.5789179801941)
+step: 2900 @ online episode: {'avg_reward': 1.9580729961395265, 'max_reward': 2.9250000596046446, 'reward_variance': 0.2783936344087124, 'coverage': 151.5, 'intra_slate_diversity': 0.6513119339942932, 'is_click_rate': 0.6932942926883697, 'is_like_rate': 0.6544922024011612, 'is_star_rate': 0.6102864801883697} @ training: {'loss': 0.03285802556201815, 'TB_loss': 0.03285802556201815}
+
+Episode step 2920, time diff 2.8213353157043457, total time diff 380.14364743232727)
+step: 2920 @ online episode: {'avg_reward': 1.967252677679062, 'max_reward': 2.9416667222976685, 'reward_variance': 0.29425846338272094, 'coverage': 152.35, 'intra_slate_diversity': 0.6498626828193664, 'is_click_rate': 0.6918619960546494, 'is_like_rate': 0.6549479395151139, 'is_star_rate': 0.6204427361488343} @ training: {'loss': 0.030417745281010867, 'TB_loss': 0.030417745281010867}
+
+Episode step 2940, time diff 2.5550098419189453, total time diff 382.9649827480316)
+step: 2940 @ online episode: {'avg_reward': 1.982356858253479, 'max_reward': 2.8916667699813843, 'reward_variance': 0.27363992780447005, 'coverage': 154.35, 'intra_slate_diversity': 0.6515310272574425, 'is_click_rate': 0.6966797143220902, 'is_like_rate': 0.6602213740348816, 'is_star_rate': 0.6254557430744171} @ training: {'loss': 0.029571406077593565, 'TB_loss': 0.029571406077593565}
+
+Episode step 2960, time diff 2.654489755630493, total time diff 385.51999258995056)
+step: 2960 @ online episode: {'avg_reward': 1.9367188274860383, 'max_reward': 2.891666758060455, 'reward_variance': 0.28469814732670784, 'coverage': 175.2, 'intra_slate_diversity': 0.6563056685030461, 'is_click_rate': 0.6753906458616257, 'is_like_rate': 0.6426432505249977, 'is_star_rate': 0.6186849176883698} @ training: {'loss': 0.04371994286775589, 'TB_loss': 0.04371994286775589}
+
+Episode step 2980, time diff 2.8880438804626465, total time diff 388.17448234558105)
+step: 2980 @ online episode: {'avg_reward': 1.974414163827896, 'max_reward': 2.9000000953674316, 'reward_variance': 0.2699076272547245, 'coverage': 150.65, 'intra_slate_diversity': 0.6487409397959709, 'is_click_rate': 0.6947265863418579, 'is_like_rate': 0.652929711341858, 'is_star_rate': 0.6267578333616257} @ training: {'loss': 0.03081555338576436, 'TB_loss': 0.03081555338576436}
+
+Episode step 3000, time diff 2.576432228088379, total time diff 391.0625262260437)
+step: 3000 @ online episode: {'avg_reward': 1.9904948592185974, 'max_reward': 2.9250000596046446, 'reward_variance': 0.28310199081897736, 'coverage': 152.65, 'intra_slate_diversity': 0.6532092362642288, 'is_click_rate': 0.7001953333616256, 'is_like_rate': 0.6597656458616257, 'is_star_rate': 0.630533879995346} @ training: {'loss': 0.031181406695395708, 'TB_loss': 0.031181406695395708}
+
+Episode step 3020, time diff 2.688887119293213, total time diff 393.6389584541321)
+step: 3020 @ online episode: {'avg_reward': 1.9805990397930144, 'max_reward': 2.9000000953674316, 'reward_variance': 0.26547840535640715, 'coverage': 152.05, 'intra_slate_diversity': 0.6528896480798722, 'is_click_rate': 0.6945312678813934, 'is_like_rate': 0.6600260585546494, 'is_star_rate': 0.6260416895151139} @ training: {'loss': 0.029342900309711695, 'TB_loss': 0.029342900309711695}
+
+Episode step 3040, time diff 2.7304859161376953, total time diff 396.3278455734253)
+step: 3040 @ online episode: {'avg_reward': 1.9751953840255738, 'max_reward': 2.8916667699813843, 'reward_variance': 0.2803072065114975, 'coverage': 152.35, 'intra_slate_diversity': 0.6485251560807228, 'is_click_rate': 0.6916015833616257, 'is_like_rate': 0.6602213680744171, 'is_star_rate': 0.6233724117279053} @ training: {'loss': 0.029130923189222814, 'TB_loss': 0.029130923189222814}
+
+Episode step 3060, time diff 2.516685962677002, total time diff 399.058331489563)
+step: 3060 @ online episode: {'avg_reward': 1.95755215883255, 'max_reward': 2.883333444595337, 'reward_variance': 0.2950198113918304, 'coverage': 153.35, 'intra_slate_diversity': 0.6506630808115006, 'is_click_rate': 0.6824869990348816, 'is_like_rate': 0.6539062708616257, 'is_star_rate': 0.6211588710546494} @ training: {'loss': 0.03301340350881219, 'TB_loss': 0.03301340350881219}
+
+Episode step 3080, time diff 2.879619598388672, total time diff 401.57501745224)
+step: 3080 @ online episode: {'avg_reward': 1.9241537272930145, 'max_reward': 2.9166667461395264, 'reward_variance': 0.302148711681366, 'coverage': 148.0, 'intra_slate_diversity': 0.6506795778870582, 'is_click_rate': 0.6757161647081376, 'is_like_rate': 0.6402994990348816, 'is_star_rate': 0.6081380367279052} @ training: {'loss': 0.0329004829749465, 'TB_loss': 0.0329004829749465}
+
+Episode step 3100, time diff 2.6116232872009277, total time diff 404.45463705062866)
+step: 3100 @ online episode: {'avg_reward': 1.9183594524860381, 'max_reward': 2.9166667461395264, 'reward_variance': 0.28869427889585497, 'coverage': 151.25, 'intra_slate_diversity': 0.6527760043740273, 'is_click_rate': 0.6730469018220901, 'is_like_rate': 0.6376953214406967, 'is_star_rate': 0.6076172113418579} @ training: {'loss': 0.032195009384304286, 'TB_loss': 0.032195009384304286}
+
+Episode step 3120, time diff 2.518671751022339, total time diff 407.0662603378296)
+step: 3120 @ online episode: {'avg_reward': 1.9300781965255738, 'max_reward': 2.8750000834465026, 'reward_variance': 0.2731553964316845, 'coverage': 179.8, 'intra_slate_diversity': 0.6567681342363357, 'is_click_rate': 0.6720052301883698, 'is_like_rate': 0.6425130352377891, 'is_star_rate': 0.615559920668602} @ training: {'loss': 0.043736533261835575, 'TB_loss': 0.043736533261835575}
+
+Episode step 3140, time diff 2.629333019256592, total time diff 409.58493208885193)
+step: 3140 @ online episode: {'avg_reward': 2.011328196525574, 'max_reward': 2.9000000953674316, 'reward_variance': 0.26792058944702146, 'coverage': 149.1, 'intra_slate_diversity': 0.6476271763443947, 'is_click_rate': 0.7025390833616256, 'is_like_rate': 0.6656901240348816, 'is_star_rate': 0.6430989742279053} @ training: {'loss': 0.03119281688705087, 'TB_loss': 0.03119281688705087}
+
+Episode step 3160, time diff 2.4374232292175293, total time diff 412.2142651081085)
+step: 3160 @ online episode: {'avg_reward': 1.908854252099991, 'max_reward': 2.9166667222976685, 'reward_variance': 0.2937527529895306, 'coverage': 171.75, 'intra_slate_diversity': 0.6551313787698746, 'is_click_rate': 0.6669271066784859, 'is_like_rate': 0.6334635660052299, 'is_star_rate': 0.60846356600523} @ training: {'loss': 0.04447005931288004, 'TB_loss': 0.04447005931288004}
+
+Episode step 3180, time diff 2.7605409622192383, total time diff 414.65168833732605)
+step: 3180 @ online episode: {'avg_reward': 1.9900391459465028, 'max_reward': 2.9166667461395264, 'reward_variance': 0.2781808115541935, 'coverage': 140.05, 'intra_slate_diversity': 0.6434423804283143, 'is_click_rate': 0.6934244990348816, 'is_like_rate': 0.662630233168602, 'is_star_rate': 0.6339843928813934} @ training: {'loss': 0.031197619531303643, 'TB_loss': 0.031197619531303643}
+
+Episode step 3200, time diff 2.5697546005249023, total time diff 417.4122292995453)
+step: 3200 @ online episode: {'avg_reward': 1.9751302659511567, 'max_reward': 2.891666758060455, 'reward_variance': 0.29411193653941153, 'coverage': 142.8, 'intra_slate_diversity': 0.6450134009122849, 'is_click_rate': 0.6959635615348816, 'is_like_rate': 0.6571614742279053, 'is_star_rate': 0.6220052272081376} @ training: {'loss': 0.03371408749371767, 'TB_loss': 0.03371408749371767}
+
+Episode step 3220, time diff 2.5043251514434814, total time diff 419.9819839000702)
+step: 3220 @ online episode: {'avg_reward': 1.9576823592185975, 'max_reward': 2.900000071525574, 'reward_variance': 0.2741478502750397, 'coverage': 168.25, 'intra_slate_diversity': 0.6472408168017865, 'is_click_rate': 0.6850911676883698, 'is_like_rate': 0.6472005426883698, 'is_star_rate': 0.6253906458616256} @ training: {'loss': 0.04771067053079605, 'TB_loss': 0.04771067053079605}
+
+Episode step 3240, time diff 2.392709493637085, total time diff 422.4863090515137)
+step: 3240 @ online episode: {'avg_reward': 1.9900391399860382, 'max_reward': 2.9250000715255737, 'reward_variance': 0.28350073024630545, 'coverage': 146.7, 'intra_slate_diversity': 0.6471186816692353, 'is_click_rate': 0.697851586341858, 'is_like_rate': 0.6615234553813935, 'is_star_rate': 0.6306640803813934} @ training: {'loss': 0.031419359426945445, 'TB_loss': 0.031419359426945445}
+
+Episode step 3260, time diff 2.423290729522705, total time diff 424.87901854515076)
+step: 3260 @ online episode: {'avg_reward': 1.9614584028720856, 'max_reward': 2.9000000834465025, 'reward_variance': 0.29383664950728416, 'coverage': 140.75, 'intra_slate_diversity': 0.6415056198835373, 'is_click_rate': 0.6927734613418579, 'is_like_rate': 0.6458333522081375, 'is_star_rate': 0.6228515863418579} @ training: {'loss': 0.030850267689675092, 'TB_loss': 0.030850267689675092}
+
+Episode step 3280, time diff 2.6836352348327637, total time diff 427.30230927467346)
+step: 3280 @ online episode: {'avg_reward': 1.9945964515209198, 'max_reward': 2.9250000715255737, 'reward_variance': 0.2952680133283138, 'coverage': 146.15, 'intra_slate_diversity': 0.6481728717684746, 'is_click_rate': 0.6940104365348816, 'is_like_rate': 0.6594401150941849, 'is_star_rate': 0.6411458522081375} @ training: {'loss': 0.03149726903066039, 'TB_loss': 0.03149726903066039}
+
+Episode step 3300, time diff 2.760437250137329, total time diff 429.9859445095062)
+step: 3300 @ online episode: {'avg_reward': 1.973697978258133, 'max_reward': 2.9166667342185972, 'reward_variance': 0.2919650420546532, 'coverage': 148.7, 'intra_slate_diversity': 0.6487556532025337, 'is_click_rate': 0.6815104335546494, 'is_like_rate': 0.6576823055744171, 'is_star_rate': 0.634505233168602} @ training: {'loss': 0.030667458288371564, 'TB_loss': 0.030667458288371564}
+
+Episode step 3320, time diff 2.7457642555236816, total time diff 432.74638175964355)
+step: 3320 @ online episode: {'avg_reward': 1.980143290758133, 'max_reward': 2.9166667461395264, 'reward_variance': 0.3007333420217037, 'coverage': 146.4, 'intra_slate_diversity': 0.6476677507162094, 'is_click_rate': 0.6944010615348816, 'is_like_rate': 0.6562500149011612, 'is_star_rate': 0.629492211341858} @ training: {'loss': 0.03164524305611849, 'TB_loss': 0.03164524305611849}
+
+Episode step 3340, time diff 2.5683395862579346, total time diff 435.49214601516724)
+step: 3340 @ online episode: {'avg_reward': 1.772916716337204, 'max_reward': 2.8666667461395265, 'reward_variance': 0.3025606028735638, 'coverage': 221.4, 'intra_slate_diversity': 0.6629953972995282, 'is_click_rate': 0.6294271051883698, 'is_like_rate': 0.5892578274011612, 'is_star_rate': 0.5542317822575569} @ training: {'loss': 0.06742300298064947, 'TB_loss': 0.06742300298064947}
+
+Episode step 3360, time diff 2.554029703140259, total time diff 438.06048560142517)
+step: 3360 @ online episode: {'avg_reward': 2.05598965883255, 'max_reward': 2.9416667222976685, 'reward_variance': 0.24906702488660812, 'coverage': 123.5, 'intra_slate_diversity': 0.6291480153799057, 'is_click_rate': 0.7231119990348815, 'is_like_rate': 0.6813802272081375, 'is_star_rate': 0.651497420668602} @ training: {'loss': 0.025849320646375417, 'TB_loss': 0.025849320646375417}
+
+Episode step 3380, time diff 2.8879799842834473, total time diff 440.61451530456543)
+step: 3380 @ online episode: {'avg_reward': 1.9201172709465026, 'max_reward': 2.908333396911621, 'reward_variance': 0.3076565958559513, 'coverage': 152.1, 'intra_slate_diversity': 0.6349587634205818, 'is_click_rate': 0.6761718899011612, 'is_like_rate': 0.6319010630249977, 'is_star_rate': 0.6120442897081375} @ training: {'loss': 0.0443037667311728, 'TB_loss': 0.0443037667311728}
+
+Episode step 3400, time diff 2.9008352756500244, total time diff 443.5024952888489)
+step: 3400 @ online episode: {'avg_reward': 2.013541716337204, 'max_reward': 2.9166667461395264, 'reward_variance': 0.2944574512541294, 'coverage': 122.7, 'intra_slate_diversity': 0.6272939145565033, 'is_click_rate': 0.7033854395151138, 'is_like_rate': 0.6688802272081376, 'is_star_rate': 0.6412760615348816} @ training: {'loss': 0.029178319964557886, 'TB_loss': 0.029178319964557886}
+
+Episode step 3420, time diff 2.5554611682891846, total time diff 446.4033305644989)
+step: 3420 @ online episode: {'avg_reward': 2.0062500894069673, 'max_reward': 2.950000047683716, 'reward_variance': 0.28779973536729814, 'coverage': 126.65, 'intra_slate_diversity': 0.6305736556649209, 'is_click_rate': 0.7085286676883698, 'is_like_rate': 0.6669922053813935, 'is_star_rate': 0.6307291835546494} @ training: {'loss': 0.030379964783787728, 'TB_loss': 0.030379964783787728}
+
+Episode step 3440, time diff 2.58146071434021, total time diff 448.9587917327881)
+step: 3440 @ online episode: {'avg_reward': 1.9853516459465026, 'max_reward': 2.9250000596046446, 'reward_variance': 0.2880503311753273, 'coverage': 127.5, 'intra_slate_diversity': 0.6347970768809319, 'is_click_rate': 0.6955729395151138, 'is_like_rate': 0.6604166865348816, 'is_star_rate': 0.6293619990348815} @ training: {'loss': 0.031121637858450412, 'TB_loss': 0.031121637858450412}
+
+Episode step 3460, time diff 2.8004045486450195, total time diff 451.5402524471283)
+step: 3460 @ online episode: {'avg_reward': 2.0285157024860383, 'max_reward': 2.9166667461395264, 'reward_variance': 0.2726470321416855, 'coverage': 126.85, 'intra_slate_diversity': 0.6364762306213378, 'is_click_rate': 0.7081380367279053, 'is_like_rate': 0.6777995020151139, 'is_star_rate': 0.6425781428813935} @ training: {'loss': 0.030454817414283752, 'TB_loss': 0.030454817414283752}
+
+Episode step 3480, time diff 3.144469976425171, total time diff 454.3406569957733)
+step: 3480 @ online episode: {'avg_reward': 2.007487064599991, 'max_reward': 2.933333396911621, 'reward_variance': 0.282996641099453, 'coverage': 129.35, 'intra_slate_diversity': 0.6327021926641464, 'is_click_rate': 0.7037760704755783, 'is_like_rate': 0.6694010585546494, 'is_star_rate': 0.6343099147081375} @ training: {'loss': 0.029084804095327856, 'TB_loss': 0.029084804095327856}
+
+Episode step 3500, time diff 2.556885004043579, total time diff 457.4851269721985)
+step: 3500 @ online episode: {'avg_reward': 1.9792969405651093, 'max_reward': 2.933333396911621, 'reward_variance': 0.30175851881504057, 'coverage': 133.7, 'intra_slate_diversity': 0.63666832447052, 'is_click_rate': 0.6924479395151139, 'is_like_rate': 0.664648461341858, 'is_star_rate': 0.6222005367279053} @ training: {'loss': 0.02972886161878705, 'TB_loss': 0.02972886161878705}
+
+Episode step 3520, time diff 2.6056864261627197, total time diff 460.04201197624207)
+step: 3520 @ online episode: {'avg_reward': 1.9204427897930145, 'max_reward': 2.883333420753479, 'reward_variance': 0.3050935208797455, 'coverage': 160.25, 'intra_slate_diversity': 0.6442709006369114, 'is_click_rate': 0.676692733168602, 'is_like_rate': 0.6360026180744172, 'is_star_rate': 0.6077474147081375} @ training: {'loss': 0.03918503737077117, 'TB_loss': 0.03918503737077117}
+
+Episode step 3540, time diff 2.566979169845581, total time diff 462.6476984024048)
+step: 3540 @ online episode: {'avg_reward': 2.0113933205604555, 'max_reward': 2.933333396911621, 'reward_variance': 0.2738125093281269, 'coverage': 130.55, 'intra_slate_diversity': 0.6324945136904716, 'is_click_rate': 0.7060547113418579, 'is_like_rate': 0.6679687738418579, 'is_star_rate': 0.6373698115348816} @ training: {'loss': 0.030549726262688637, 'TB_loss': 0.030549726262688637}
+
+Episode step 3560, time diff 2.5733063220977783, total time diff 465.21467757225037)
+step: 3560 @ online episode: {'avg_reward': 2.031640702486038, 'max_reward': 2.933333396911621, 'reward_variance': 0.2802411615848541, 'coverage': 127.55, 'intra_slate_diversity': 0.6340517714619637, 'is_click_rate': 0.7194661617279052, 'is_like_rate': 0.6720703303813934, 'is_star_rate': 0.6401041865348815} @ training: {'loss': 0.028948163706809284, 'TB_loss': 0.028948163706809284}
+
+Episode step 3580, time diff 3.1060707569122314, total time diff 467.78798389434814)
+step: 3580 @ online episode: {'avg_reward': 1.99602872133255, 'max_reward': 2.9250000715255737, 'reward_variance': 0.2789892315864563, 'coverage': 136.05, 'intra_slate_diversity': 0.6399337351322174, 'is_click_rate': 0.7024088770151138, 'is_like_rate': 0.6570312678813934, 'is_star_rate': 0.6365885674953461} @ training: {'loss': 0.02851976817473769, 'TB_loss': 0.02851976817473769}
+
+Episode step 3600, time diff 2.5415120124816895, total time diff 470.8940546512604)
+step: 3600 @ online episode: {'avg_reward': 2.01067715883255, 'max_reward': 2.9166667342185972, 'reward_variance': 0.28737033158540726, 'coverage': 132.75, 'intra_slate_diversity': 0.635277459025383, 'is_click_rate': 0.7054687678813935, 'is_like_rate': 0.6681640833616257, 'is_star_rate': 0.6370442926883697} @ training: {'loss': 0.03210346810519695, 'TB_loss': 0.03210346810519695}
+
+Episode step 3620, time diff 2.5735526084899902, total time diff 473.43556666374207)
+step: 3620 @ online episode: {'avg_reward': 2.0180990517139437, 'max_reward': 2.8916667699813843, 'reward_variance': 0.2558433286845684, 'coverage': 137.45, 'intra_slate_diversity': 0.6414454147219658, 'is_click_rate': 0.7128906428813935, 'is_like_rate': 0.6712890803813935, 'is_star_rate': 0.633919283747673} @ training: {'loss': 0.02678009532392025, 'TB_loss': 0.02678009532392025}
+
+Episode step 3640, time diff 2.4276041984558105, total time diff 476.00911927223206)
+step: 3640 @ online episode: {'avg_reward': 1.9865235090255737, 'max_reward': 2.933333396911621, 'reward_variance': 0.30198894813656807, 'coverage': 138.45, 'intra_slate_diversity': 0.6408956304192543, 'is_click_rate': 0.6960937649011611, 'is_like_rate': 0.6591797083616256, 'is_star_rate': 0.6312500178813935} @ training: {'loss': 0.0320296379737556, 'TB_loss': 0.0320296379737556}
+
+Episode step 3660, time diff 2.4816179275512695, total time diff 478.43672347068787)
+step: 3660 @ online episode: {'avg_reward': 1.984700608253479, 'max_reward': 2.9250000715255737, 'reward_variance': 0.27460265159606934, 'coverage': 140.15, 'intra_slate_diversity': 0.6411322519183159, 'is_click_rate': 0.6950521051883698, 'is_like_rate': 0.6571614801883697, 'is_star_rate': 0.6324870020151139} @ training: {'loss': 0.02996211014688015, 'TB_loss': 0.02996211014688015}
+
+Episode step 3680, time diff 2.650827407836914, total time diff 480.91834139823914)
+step: 3680 @ online episode: {'avg_reward': 1.964192771911621, 'max_reward': 2.9250000715255737, 'reward_variance': 0.2942388989031315, 'coverage': 142.65, 'intra_slate_diversity': 0.6460675045847892, 'is_click_rate': 0.6867838799953461, 'is_like_rate': 0.6547526240348815, 'is_star_rate': 0.6226562649011612} @ training: {'loss': 0.029600800666958093, 'TB_loss': 0.029600800666958093}
+
+Episode step 3700, time diff 2.418116807937622, total time diff 483.56916880607605)
+step: 3700 @ online episode: {'avg_reward': 1.9056641399860381, 'max_reward': 2.900000071525574, 'reward_variance': 0.2879073038697243, 'coverage': 165.1, 'intra_slate_diversity': 0.6465361662209034, 'is_click_rate': 0.6781250238418579, 'is_like_rate': 0.6289713770151139, 'is_star_rate': 0.5985677257180214} @ training: {'loss': 0.04500915231183171, 'TB_loss': 0.04500915231183171}
+
+Episode step 3720, time diff 2.402825117111206, total time diff 485.9872856140137)
+step: 3720 @ online episode: {'avg_reward': 1.99192715883255, 'max_reward': 2.9166667461395264, 'reward_variance': 0.27640650793910027, 'coverage': 133.35, 'intra_slate_diversity': 0.6368226274847985, 'is_click_rate': 0.7007161617279053, 'is_like_rate': 0.6567057520151138, 'is_star_rate': 0.634505233168602} @ training: {'loss': 0.030932200886309148, 'TB_loss': 0.030932200886309148}
+
+Episode step 3740, time diff 2.5012712478637695, total time diff 488.3901107311249)
+step: 3740 @ online episode: {'avg_reward': 1.9809245347976685, 'max_reward': 2.891666758060455, 'reward_variance': 0.2755841679871082, 'coverage': 137.25, 'intra_slate_diversity': 0.6403450846672059, 'is_click_rate': 0.6970703333616257, 'is_like_rate': 0.6556640833616256, 'is_star_rate': 0.6281901180744172} @ training: {'loss': 0.029463069792836905, 'TB_loss': 0.029463069792836905}
+
+Episode step 3760, time diff 2.4783215522766113, total time diff 490.89138197898865)
+step: 3760 @ online episode: {'avg_reward': 2.004687577486038, 'max_reward': 2.9416667222976685, 'reward_variance': 0.28507048115134237, 'coverage': 137.15, 'intra_slate_diversity': 0.6395436719059944, 'is_click_rate': 0.7048177212476731, 'is_like_rate': 0.6619791924953461, 'is_star_rate': 0.6378906458616257} @ training: {'loss': 0.030830930266529322, 'TB_loss': 0.030830930266529322}
+
+Episode step 3780, time diff 2.986722707748413, total time diff 493.36970353126526)
+step: 3780 @ online episode: {'avg_reward': 1.8985026955604554, 'max_reward': 2.88333340883255, 'reward_variance': 0.3103976368904114, 'coverage': 167.85, 'intra_slate_diversity': 0.651373977214098, 'is_click_rate': 0.6711588755249978, 'is_like_rate': 0.6233073115348816, 'is_star_rate': 0.6040364772081375} @ training: {'loss': 0.03786604451015592, 'TB_loss': 0.03786604451015592}
+
+Episode step 3800, time diff 2.3784661293029785, total time diff 496.3564262390137)
+step: 3800 @ online episode: {'avg_reward': 1.9925130963325501, 'max_reward': 2.933333396911621, 'reward_variance': 0.27652364522218703, 'coverage': 136.45, 'intra_slate_diversity': 0.6403526067733765, 'is_click_rate': 0.6953776240348816, 'is_like_rate': 0.663997408747673, 'is_star_rate': 0.6331380337476731} @ training: {'loss': 0.03161396961659193, 'TB_loss': 0.03161396961659193}
+
+Episode step 3820, time diff 2.6465070247650146, total time diff 498.73489236831665)
+step: 3820 @ online episode: {'avg_reward': 2.024218827486038, 'max_reward': 2.9250000715255737, 'reward_variance': 0.26688626408576965, 'coverage': 138.85, 'intra_slate_diversity': 0.639639213681221, 'is_click_rate': 0.7008463770151139, 'is_like_rate': 0.6757812619209289, 'is_star_rate': 0.6475911647081375} @ training: {'loss': 0.028520807810127734, 'TB_loss': 0.028520807810127734}
+
+Episode step 3840, time diff 2.3753693103790283, total time diff 501.38139939308167)
+step: 3840 @ online episode: {'avg_reward': 1.9852865278720855, 'max_reward': 2.9166667461395264, 'reward_variance': 0.3008904576301575, 'coverage': 138.2, 'intra_slate_diversity': 0.6396772712469101, 'is_click_rate': 0.6985677242279053, 'is_like_rate': 0.6593750238418579, 'is_star_rate': 0.6273437738418579} @ training: {'loss': 0.030560432747006417, 'TB_loss': 0.030560432747006417}
+
+Episode step 3860, time diff 2.748873710632324, total time diff 503.7567687034607)
+step: 3860 @ online episode: {'avg_reward': 2.024088627099991, 'max_reward': 2.9000000953674316, 'reward_variance': 0.27280253246426583, 'coverage': 140.2, 'intra_slate_diversity': 0.642804616689682, 'is_click_rate': 0.7056640803813934, 'is_like_rate': 0.6758463710546494, 'is_star_rate': 0.6425781458616256} @ training: {'loss': 0.027786571998149157, 'TB_loss': 0.027786571998149157}
+
+Episode step 3880, time diff 3.106536388397217, total time diff 506.505642414093)
+step: 3880 @ online episode: {'avg_reward': 1.9417318612337113, 'max_reward': 2.908333384990692, 'reward_variance': 0.28833211213350296, 'coverage': 166.7, 'intra_slate_diversity': 0.6465110152959823, 'is_click_rate': 0.6817057460546494, 'is_like_rate': 0.6411458522081375, 'is_star_rate': 0.6188802286982537} @ training: {'loss': 0.04491210887208581, 'TB_loss': 0.04491210887208581}
+
+Episode step 3900, time diff 2.9427685737609863, total time diff 509.61217880249023)
+step: 3900 @ online episode: {'avg_reward': 1.9230469763278961, 'max_reward': 2.88333340883255, 'reward_variance': 0.3035928808152676, 'coverage': 161.65, 'intra_slate_diversity': 0.6442011550068856, 'is_click_rate': 0.6743489772081375, 'is_like_rate': 0.6361979424953461, 'is_star_rate': 0.6125000208616257} @ training: {'loss': 0.04625894576311111, 'TB_loss': 0.04625894576311111}
+
+Episode step 3920, time diff 2.4868226051330566, total time diff 512.5549473762512)
+step: 3920 @ online episode: {'avg_reward': 2.0069662392139436, 'max_reward': 2.9166667461395264, 'reward_variance': 0.28991699293255807, 'coverage': 127.8, 'intra_slate_diversity': 0.6300207287073135, 'is_click_rate': 0.704817733168602, 'is_like_rate': 0.6638672083616257, 'is_star_rate': 0.6382812678813934} @ training: {'loss': 0.03138692965731025, 'TB_loss': 0.03138692965731025}
+
+Episode step 3940, time diff 2.6811635494232178, total time diff 515.0417699813843)
+step: 3940 @ online episode: {'avg_reward': 2.0106771767139433, 'max_reward': 2.9250000596046446, 'reward_variance': 0.2974882960319519, 'coverage': 132.75, 'intra_slate_diversity': 0.634790101647377, 'is_click_rate': 0.708138045668602, 'is_like_rate': 0.6657552272081375, 'is_star_rate': 0.6367838770151139} @ training: {'loss': 0.03129468886181712, 'TB_loss': 0.03129468886181712}
+
+Episode step 3960, time diff 2.7689478397369385, total time diff 517.7229335308075)
+step: 3960 @ online episode: {'avg_reward': 1.9944662213325501, 'max_reward': 2.958333373069763, 'reward_variance': 0.30235017612576487, 'coverage': 130.2, 'intra_slate_diversity': 0.634716659784317, 'is_click_rate': 0.7011067897081376, 'is_like_rate': 0.6595703333616256, 'is_star_rate': 0.6337890833616256} @ training: {'loss': 0.03053257605060935, 'TB_loss': 0.03053257605060935}
+
+Episode step 3980, time diff 2.8924076557159424, total time diff 520.4918813705444)
+step: 3980 @ online episode: {'avg_reward': 1.957356831431389, 'max_reward': 2.8916667461395265, 'reward_variance': 0.2612697809934616, 'coverage': 160.1, 'intra_slate_diversity': 0.6433792643249034, 'is_click_rate': 0.6877604365348816, 'is_like_rate': 0.6458333492279053, 'is_star_rate': 0.6237630426883698} @ training: {'loss': 0.04405272603034973, 'TB_loss': 0.04405272603034973}
+
+Episode step 4000, time diff 2.4529097080230713, total time diff 523.3842890262604)
+step: 4000 @ online episode: {'avg_reward': 2.048372483253479, 'max_reward': 2.933333396911621, 'reward_variance': 0.2647078365087509, 'coverage': 127.15, 'intra_slate_diversity': 0.6315701499581337, 'is_click_rate': 0.7147135674953461, 'is_like_rate': 0.6820312678813935, 'is_star_rate': 0.6516276240348816} @ training: {'loss': 0.03271748339757323, 'TB_loss': 0.03271748339757323}
+
+Episode step 4020, time diff 2.4791762828826904, total time diff 525.8371987342834)
+step: 4020 @ online episode: {'avg_reward': 1.961979204416275, 'max_reward': 2.9166667222976685, 'reward_variance': 0.2739016205072403, 'coverage': 156.4, 'intra_slate_diversity': 0.640901206433773, 'is_click_rate': 0.6916015803813934, 'is_like_rate': 0.6470052316784859, 'is_star_rate': 0.6233724117279053} @ training: {'loss': 0.04211899181827903, 'TB_loss': 0.04211899181827903}
+
+Episode step 4040, time diff 2.4954164028167725, total time diff 528.3163750171661)
+step: 4040 @ online episode: {'avg_reward': 2.026953196525574, 'max_reward': 2.9666666984558105, 'reward_variance': 0.29351847618818283, 'coverage': 123.5, 'intra_slate_diversity': 0.6288105502724648, 'is_click_rate': 0.710872420668602, 'is_like_rate': 0.6748698115348816, 'is_star_rate': 0.6412109583616257} @ training: {'loss': 0.030985040217638017, 'TB_loss': 0.030985040217638017}
+
+Episode step 4060, time diff 2.842288017272949, total time diff 530.8117914199829)
+step: 4060 @ online episode: {'avg_reward': 2.013216233253479, 'max_reward': 2.958333373069763, 'reward_variance': 0.2716030701994896, 'coverage': 122.45, 'intra_slate_diversity': 0.6287394493818284, 'is_click_rate': 0.7067708492279052, 'is_like_rate': 0.6697265863418579, 'is_star_rate': 0.6367187678813935} @ training: {'loss': 0.02961007636040449, 'TB_loss': 0.02961007636040449}
+
+Episode step 4080, time diff 2.9620368480682373, total time diff 533.6540794372559)
+step: 4080 @ online episode: {'avg_reward': 2.0231771528720857, 'max_reward': 2.9416667222976685, 'reward_variance': 0.28700909167528155, 'coverage': 124.9, 'intra_slate_diversity': 0.63286851644516, 'is_click_rate': 0.7072265803813934, 'is_like_rate': 0.670833358168602, 'is_star_rate': 0.6451172053813934} @ training: {'loss': 0.029727754183113575, 'TB_loss': 0.029727754183113575}
+
+Episode step 4100, time diff 2.6846747398376465, total time diff 536.6161162853241)
+step: 4100 @ online episode: {'avg_reward': 2.016276103258133, 'max_reward': 2.9166667461395264, 'reward_variance': 0.2926680274307728, 'coverage': 127.1, 'intra_slate_diversity': 0.6312491983175278, 'is_click_rate': 0.7045573145151138, 'is_like_rate': 0.6733724176883698, 'is_star_rate': 0.6383463770151139} @ training: {'loss': 0.030454353615641593, 'TB_loss': 0.030454353615641593}
+
+Episode step 4120, time diff 2.6852056980133057, total time diff 539.3007910251617)
+step: 4120 @ online episode: {'avg_reward': 2.044401103258133, 'max_reward': 2.9166667342185972, 'reward_variance': 0.25584008246660234, 'coverage': 126.7, 'intra_slate_diversity': 0.6316030874848366, 'is_click_rate': 0.7169271022081375, 'is_like_rate': 0.6824869960546494, 'is_star_rate': 0.6449869960546494} @ training: {'loss': 0.027447093930095433, 'TB_loss': 0.027447093930095433}
+
+Episode step 4140, time diff 2.4732468128204346, total time diff 541.985996723175)
+step: 4140 @ online episode: {'avg_reward': 2.00013028383255, 'max_reward': 2.933333396911621, 'reward_variance': 0.27044032961130143, 'coverage': 128.55, 'intra_slate_diversity': 0.633663372695446, 'is_click_rate': 0.698958358168602, 'is_like_rate': 0.6685547024011612, 'is_star_rate': 0.6326172083616257} @ training: {'loss': 0.027291160728782415, 'TB_loss': 0.027291160728782415}
+
+Episode step 4160, time diff 2.5277292728424072, total time diff 544.4592435359955)
+step: 4160 @ online episode: {'avg_reward': 1.997070413827896, 'max_reward': 2.950000047683716, 'reward_variance': 0.27576716542243956, 'coverage': 134.1, 'intra_slate_diversity': 0.6357948303222656, 'is_click_rate': 0.7003906428813934, 'is_like_rate': 0.6639323115348816, 'is_star_rate': 0.6327474147081376} @ training: {'loss': 0.029817520547658204, 'TB_loss': 0.029817520547658204}
+
+Episode step 4180, time diff 2.8516268730163574, total time diff 546.9869728088379)
+step: 4180 @ online episode: {'avg_reward': 1.9515625655651092, 'max_reward': 2.9000000834465025, 'reward_variance': 0.31178796738386155, 'coverage': 130.35, 'intra_slate_diversity': 0.6354626804590225, 'is_click_rate': 0.6893229395151138, 'is_like_rate': 0.648958346247673, 'is_star_rate': 0.6132812738418579} @ training: {'loss': 0.0318360885605216, 'TB_loss': 0.0318360885605216}
+
+Episode step 4200, time diff 2.4247639179229736, total time diff 549.8385996818542)
+step: 4200 @ online episode: {'avg_reward': 1.9365235030651093, 'max_reward': 2.933333396911621, 'reward_variance': 0.27306560426950455, 'coverage': 161.9, 'intra_slate_diversity': 0.6470116093754769, 'is_click_rate': 0.6829427301883697, 'is_like_rate': 0.6423177242279052, 'is_star_rate': 0.6112630352377891} @ training: {'loss': 0.04417791301384568, 'TB_loss': 0.04417791301384568}
+
+Episode step 4220, time diff 3.0337061882019043, total time diff 552.2633635997772)
+step: 4220 @ online episode: {'avg_reward': 1.9454427719116212, 'max_reward': 2.8916667342185973, 'reward_variance': 0.2800229497253895, 'coverage': 157.8, 'intra_slate_diversity': 0.6441715642809868, 'is_click_rate': 0.6805338755249977, 'is_like_rate': 0.6458984583616256, 'is_star_rate': 0.6190104365348816} @ training: {'loss': 0.05342414202168584, 'TB_loss': 0.05342414202168584}
+
+Episode step 4240, time diff 2.495750904083252, total time diff 555.2970697879791)
+step: 4240 @ online episode: {'avg_reward': 2.0231120705604555, 'max_reward': 2.9416667222976685, 'reward_variance': 0.27766560912132265, 'coverage': 125.95, 'intra_slate_diversity': 0.6325049728155137, 'is_click_rate': 0.7082682430744172, 'is_like_rate': 0.6675781458616257, 'is_star_rate': 0.6472656458616257} @ training: {'loss': 0.03276006206870079, 'TB_loss': 0.03276006206870079}
+
+Episode step 4260, time diff 2.420016288757324, total time diff 557.7928206920624)
+step: 4260 @ online episode: {'avg_reward': 2.0011719524860383, 'max_reward': 2.958333373069763, 'reward_variance': 0.3104332685470581, 'coverage': 127.45, 'intra_slate_diversity': 0.6303847476840019, 'is_click_rate': 0.7029297113418579, 'is_like_rate': 0.6615885615348815, 'is_star_rate': 0.6366536676883697} @ training: {'loss': 0.031056110095232726, 'TB_loss': 0.031056110095232726}
+
+Episode step 4280, time diff 2.701432466506958, total time diff 560.2128369808197)
+step: 4280 @ online episode: {'avg_reward': 1.9980469524860383, 'max_reward': 2.9166667461395264, 'reward_variance': 0.2926981016993523, 'coverage': 129.75, 'intra_slate_diversity': 0.637777079641819, 'is_click_rate': 0.7053385615348816, 'is_like_rate': 0.6602864772081375, 'is_star_rate': 0.6324218958616257} @ training: {'loss': 0.030338486563414334, 'TB_loss': 0.030338486563414334}
+
+Episode step 4300, time diff 2.796082019805908, total time diff 562.9142694473267)
+step: 4300 @ online episode: {'avg_reward': 2.0319662213325502, 'max_reward': 2.9416667222976685, 'reward_variance': 0.2838033393025398, 'coverage': 126.7, 'intra_slate_diversity': 0.6333703845739365, 'is_click_rate': 0.7113281488418579, 'is_like_rate': 0.6708984613418579, 'is_star_rate': 0.6497395962476731} @ training: {'loss': 0.02956251138821244, 'TB_loss': 0.02956251138821244}
+
+Episode step 4320, time diff 2.7525393962860107, total time diff 565.7103514671326)
+step: 4320 @ online episode: {'avg_reward': 1.949674552679062, 'max_reward': 2.88333340883255, 'reward_variance': 0.2824344538152218, 'coverage': 154.7, 'intra_slate_diversity': 0.6394298791885376, 'is_click_rate': 0.6919922024011612, 'is_like_rate': 0.6434244990348816, 'is_star_rate': 0.6142578378319741} @ training: {'loss': 0.040453673154115674, 'TB_loss': 0.040453673154115674}
+
+Episode step 4340, time diff 2.6296780109405518, total time diff 568.4628908634186)
+step: 4340 @ online episode: {'avg_reward': 2.0191407024860384, 'max_reward': 2.958333373069763, 'reward_variance': 0.2896484613418579, 'coverage': 124.85, 'intra_slate_diversity': 0.6293700143694878, 'is_click_rate': 0.7093099147081375, 'is_like_rate': 0.6694661617279053, 'is_star_rate': 0.640364608168602} @ training: {'loss': 0.028834827523678542, 'TB_loss': 0.028834827523678542}
+
+Episode step 4360, time diff 2.4170589447021484, total time diff 571.0925688743591)
+step: 4360 @ online episode: {'avg_reward': 2.0287110209465027, 'max_reward': 2.950000047683716, 'reward_variance': 0.2784682296216488, 'coverage': 126.6, 'intra_slate_diversity': 0.6303455010056496, 'is_click_rate': 0.7099609553813935, 'is_like_rate': 0.6742187738418579, 'is_star_rate': 0.6445312649011612} @ training: {'loss': 0.028878398425877094, 'TB_loss': 0.028878398425877094}
+
+Episode step 4380, time diff 3.3341124057769775, total time diff 573.5096278190613)
+step: 4380 @ online episode: {'avg_reward': 2.022330790758133, 'max_reward': 2.933333396911621, 'reward_variance': 0.2847693160176277, 'coverage': 123.85, 'intra_slate_diversity': 0.6305582284927368, 'is_click_rate': 0.7102864801883697, 'is_like_rate': 0.6725260645151139, 'is_star_rate': 0.6395182490348816} @ training: {'loss': 0.02785989809781313, 'TB_loss': 0.02785989809781313}
+
+Episode step 4400, time diff 2.8232712745666504, total time diff 576.8437402248383)
+step: 4400 @ online episode: {'avg_reward': 1.977604240179062, 'max_reward': 2.9166667461395264, 'reward_variance': 0.315523861348629, 'coverage': 127.55, 'intra_slate_diversity': 0.6344436272978783, 'is_click_rate': 0.6927734524011612, 'is_like_rate': 0.6570312678813934, 'is_star_rate': 0.6277995020151138} @ training: {'loss': 0.029942064266651868, 'TB_loss': 0.029942064266651868}
+
+Episode step 4420, time diff 2.7107815742492676, total time diff 579.6670114994049)
+step: 4420 @ online episode: {'avg_reward': 2.0248047709465027, 'max_reward': 2.950000047683716, 'reward_variance': 0.28815200701355936, 'coverage': 130.4, 'intra_slate_diversity': 0.632829712331295, 'is_click_rate': 0.7077474236488343, 'is_like_rate': 0.6712890833616256, 'is_star_rate': 0.6457682549953461} @ training: {'loss': 0.027657651342451572, 'TB_loss': 0.027657651342451572}
+
+Episode step 4440, time diff 2.601724624633789, total time diff 582.3777930736542)
+step: 4440 @ online episode: {'avg_reward': 1.9660808145999908, 'max_reward': 2.9250000715255737, 'reward_variance': 0.2963689662516117, 'coverage': 135.3, 'intra_slate_diversity': 0.6374352350831032, 'is_click_rate': 0.6944010585546494, 'is_like_rate': 0.6483724176883697, 'is_star_rate': 0.6233073145151138} @ training: {'loss': 0.03198906313627958, 'TB_loss': 0.03198906313627958}
+
+Episode step 4460, time diff 2.4426188468933105, total time diff 584.979517698288)
+step: 4460 @ online episode: {'avg_reward': 2.004947990179062, 'max_reward': 2.9250000596046446, 'reward_variance': 0.2823625922203064, 'coverage': 137.65, 'intra_slate_diversity': 0.6377935811877251, 'is_click_rate': 0.7024088770151138, 'is_like_rate': 0.6604166924953461, 'is_star_rate': 0.642122420668602} @ training: {'loss': 0.02815850656479597, 'TB_loss': 0.02815850656479597}
+
+Episode step 4480, time diff 2.8331968784332275, total time diff 587.4221365451813)
+step: 4480 @ online episode: {'avg_reward': 1.9781250655651093, 'max_reward': 2.933333396911621, 'reward_variance': 0.3001869611442089, 'coverage': 133.85, 'intra_slate_diversity': 0.6338986650109291, 'is_click_rate': 0.688216170668602, 'is_like_rate': 0.6568359583616257, 'is_star_rate': 0.6330729335546493} @ training: {'loss': 0.03073202697560191, 'TB_loss': 0.03073202697560191}
+
+Episode step 4500, time diff 2.6141631603240967, total time diff 590.2553334236145)
+step: 4500 @ online episode: {'avg_reward': 2.029817807674408, 'max_reward': 2.9250000596046446, 'reward_variance': 0.2634053312242031, 'coverage': 139.45, 'intra_slate_diversity': 0.638032241165638, 'is_click_rate': 0.7141927301883697, 'is_like_rate': 0.6695312708616257, 'is_star_rate': 0.646093773841858} @ training: {'loss': 0.031364765018224716, 'TB_loss': 0.031364765018224716}
+
+Episode step 4520, time diff 2.5672013759613037, total time diff 592.8694965839386)
+step: 4520 @ online episode: {'avg_reward': 1.9457031786441803, 'max_reward': 2.925000047683716, 'reward_variance': 0.2972475327551365, 'coverage': 163.7, 'intra_slate_diversity': 0.644101582467556, 'is_click_rate': 0.6878906488418579, 'is_like_rate': 0.6447916835546493, 'is_star_rate': 0.6130208551883698} @ training: {'loss': 0.04129409361630678, 'TB_loss': 0.04129409361630678}
+
+Episode step 4540, time diff 2.737959861755371, total time diff 595.4366979598999)
+step: 4540 @ online episode: {'avg_reward': 2.0109375536441805, 'max_reward': 2.9416667222976685, 'reward_variance': 0.2699516177177429, 'coverage': 135.2, 'intra_slate_diversity': 0.6359596773982048, 'is_click_rate': 0.708593773841858, 'is_like_rate': 0.6649739801883697, 'is_star_rate': 0.6373698085546493} @ training: {'loss': 0.03082296932116151, 'TB_loss': 0.03082296932116151}
+
+Episode step 4560, time diff 2.388118267059326, total time diff 598.1746578216553)
+step: 4560 @ online episode: {'avg_reward': 1.9227865099906922, 'max_reward': 2.8666667342185974, 'reward_variance': 0.27681404948234556, 'coverage': 162.15, 'intra_slate_diversity': 0.6420054741203784, 'is_click_rate': 0.678841158747673, 'is_like_rate': 0.6388672053813934, 'is_star_rate': 0.6050781428813934} @ training: {'loss': 0.04096131073310971, 'TB_loss': 0.04096131073310971}
+
+Episode step 4580, time diff 2.7162859439849854, total time diff 600.5627760887146)
+step: 4580 @ online episode: {'avg_reward': 2.028059995174408, 'max_reward': 2.9500000357627867, 'reward_variance': 0.2816012568771839, 'coverage': 129.85, 'intra_slate_diversity': 0.6316632553935051, 'is_click_rate': 0.7083984553813935, 'is_like_rate': 0.6720052301883698, 'is_star_rate': 0.6476562708616257} @ training: {'loss': 0.03333478132262826, 'TB_loss': 0.03333478132262826}
+
+Episode step 4600, time diff 2.5517194271087646, total time diff 603.2790620326996)
+step: 4600 @ online episode: {'avg_reward': 2.013086038827896, 'max_reward': 2.9250000715255737, 'reward_variance': 0.2781623549759388, 'coverage': 128.55, 'intra_slate_diversity': 0.6329999968409539, 'is_click_rate': 0.7065104335546494, 'is_like_rate': 0.6696614772081375, 'is_star_rate': 0.6369140803813934} @ training: {'loss': 0.028540211357176305, 'TB_loss': 0.028540211357176305}
+
+Episode step 4620, time diff 2.887444019317627, total time diff 605.8307814598083)
+step: 4620 @ online episode: {'avg_reward': 1.9906250596046449, 'max_reward': 2.933333384990692, 'reward_variance': 0.2878819353878498, 'coverage': 129.8, 'intra_slate_diversity': 0.6339468449354172, 'is_click_rate': 0.6994791865348816, 'is_like_rate': 0.655078136920929, 'is_star_rate': 0.6360677301883697} @ training: {'loss': 0.030441521387547254, 'TB_loss': 0.030441521387547254}
+
+Episode step 4640, time diff 2.727717161178589, total time diff 608.718225479126)
+step: 4640 @ online episode: {'avg_reward': 2.0130859911441803, 'max_reward': 2.950000047683716, 'reward_variance': 0.28860926777124407, 'coverage': 131.5, 'intra_slate_diversity': 0.6342170804738998, 'is_click_rate': 0.7011718958616256, 'is_like_rate': 0.667903670668602, 'is_star_rate': 0.6440104335546494} @ training: {'loss': 0.030234460905194282, 'TB_loss': 0.030234460905194282}
+
+Episode step 4660, time diff 2.871922492980957, total time diff 611.4459426403046)
+step: 4660 @ online episode: {'avg_reward': 1.9969401895999908, 'max_reward': 2.9250000715255737, 'reward_variance': 0.2922004148364067, 'coverage': 136.35, 'intra_slate_diversity': 0.6370298057794571, 'is_click_rate': 0.6927734613418579, 'is_like_rate': 0.6645833522081375, 'is_star_rate': 0.639583358168602} @ training: {'loss': 0.029438261687755585, 'TB_loss': 0.029438261687755585}
+
+Episode step 4680, time diff 2.926025152206421, total time diff 614.3178651332855)
+step: 4680 @ online episode: {'avg_reward': 2.000000077486038, 'max_reward': 2.950000047683716, 'reward_variance': 0.29136868193745613, 'coverage': 135.35, 'intra_slate_diversity': 0.6361894607543945, 'is_click_rate': 0.7020833492279053, 'is_like_rate': 0.6599609553813934, 'is_star_rate': 0.6379557549953461} @ training: {'loss': 0.03174591977149248, 'TB_loss': 0.03174591977149248}
+
+Episode step 4700, time diff 2.4343771934509277, total time diff 617.243890285492)
+step: 4700 @ online episode: {'avg_reward': 2.0357422649860384, 'max_reward': 2.9250000715255737, 'reward_variance': 0.27204461246728895, 'coverage': 131.7, 'intra_slate_diversity': 0.6356371715664864, 'is_click_rate': 0.7103515803813935, 'is_like_rate': 0.6777344018220901, 'is_star_rate': 0.6476562768220901} @ training: {'loss': 0.027645314764231443, 'TB_loss': 0.027645314764231443}
+
+Episode step 4720, time diff 2.4198267459869385, total time diff 619.6782674789429)
+step: 4720 @ online episode: {'avg_reward': 2.0323568165302275, 'max_reward': 2.9166667342185972, 'reward_variance': 0.2675302103161812, 'coverage': 134.15, 'intra_slate_diversity': 0.6361522346735, 'is_click_rate': 0.7060547024011612, 'is_like_rate': 0.6764974147081375, 'is_star_rate': 0.6498047083616256} @ training: {'loss': 0.029094022512435914, 'TB_loss': 0.029094022512435914}
+
+Episode step 4740, time diff 2.4655685424804688, total time diff 622.0980942249298)
+step: 4740 @ online episode: {'avg_reward': 2.0066406965255736, 'max_reward': 2.9166667222976685, 'reward_variance': 0.2674207709729671, 'coverage': 139.6, 'intra_slate_diversity': 0.6379723682999611, 'is_click_rate': 0.7097656458616257, 'is_like_rate': 0.6686849147081375, 'is_star_rate': 0.6281901240348816} @ training: {'loss': 0.02841458572074771, 'TB_loss': 0.02841458572074771}
+
+Episode step 4760, time diff 2.4820234775543213, total time diff 624.5636627674103)
+step: 4760 @ online episode: {'avg_reward': 2.0080729961395263, 'max_reward': 2.958333373069763, 'reward_variance': 0.27940009981393815, 'coverage': 140.85, 'intra_slate_diversity': 0.6400284871459008, 'is_click_rate': 0.7031901121139527, 'is_like_rate': 0.667513045668602, 'is_star_rate': 0.6373698115348816} @ training: {'loss': 0.030824286211282016, 'TB_loss': 0.030824286211282016}
+
+Episode step 4780, time diff 2.729012966156006, total time diff 627.0456862449646)
+step: 4780 @ online episode: {'avg_reward': 1.9199219644069672, 'max_reward': 2.8750000834465026, 'reward_variance': 0.282197704911232, 'coverage': 165.7, 'intra_slate_diversity': 0.6455468200147152, 'is_click_rate': 0.6766276180744171, 'is_like_rate': 0.6340494960546493, 'is_star_rate': 0.6092448145151138} @ training: {'loss': 0.04148053927347064, 'TB_loss': 0.04148053927347064}
+
+Episode step 4800, time diff 2.4769158363342285, total time diff 629.7746992111206)
+step: 4800 @ online episode: {'avg_reward': 1.9248047649860383, 'max_reward': 2.8916667461395265, 'reward_variance': 0.27884192690253257, 'coverage': 156.65, 'intra_slate_diversity': 0.6382470436394214, 'is_click_rate': 0.6845703333616256, 'is_like_rate': 0.6356770977377891, 'is_star_rate': 0.6045573115348816} @ training: {'loss': 0.04445653446018696, 'TB_loss': 0.04445653446018696}
+
+Episode step 4820, time diff 2.499967098236084, total time diff 632.2516150474548)
+step: 4820 @ online episode: {'avg_reward': 2.0092448592185974, 'max_reward': 2.9250000357627868, 'reward_variance': 0.2524211756885052, 'coverage': 156.1, 'intra_slate_diversity': 0.6366067171096802, 'is_click_rate': 0.6999349147081375, 'is_like_rate': 0.6714843928813934, 'is_star_rate': 0.6378255397081375} @ training: {'loss': 0.033457597624510525, 'TB_loss': 0.033457597624510525}
+
+Episode step 4840, time diff 2.504457950592041, total time diff 634.7515821456909)
+step: 4840 @ online episode: {'avg_reward': 1.9976563096046447, 'max_reward': 2.933333396911621, 'reward_variance': 0.29345850348472596, 'coverage': 127.3, 'intra_slate_diversity': 0.6284657791256905, 'is_click_rate': 0.7033203303813934, 'is_like_rate': 0.656966170668602, 'is_star_rate': 0.6373698115348816} @ training: {'loss': 0.03289578724652529, 'TB_loss': 0.03289578724652529}
+
+Episode step 4860, time diff 2.520784616470337, total time diff 637.256040096283)
+step: 4860 @ online episode: {'avg_reward': 1.9548177897930146, 'max_reward': 2.88333340883255, 'reward_variance': 0.3006649002432823, 'coverage': 145.4, 'intra_slate_diversity': 0.6293303839862346, 'is_click_rate': 0.6893880367279053, 'is_like_rate': 0.6466797068715096, 'is_star_rate': 0.6187500163912774} @ training: {'loss': 0.04561910452321172, 'TB_loss': 0.04561910452321172}
+
+Episode step 4880, time diff 3.145643711090088, total time diff 639.7768247127533)
+step: 4880 @ online episode: {'avg_reward': 2.03352872133255, 'max_reward': 2.908333420753479, 'reward_variance': 0.2671607732772827, 'coverage': 120.45, 'intra_slate_diversity': 0.6275458931922913, 'is_click_rate': 0.7126953333616257, 'is_like_rate': 0.6739583492279053, 'is_star_rate': 0.6468750178813935} @ training: {'loss': 0.029043814446777106, 'TB_loss': 0.029043814446777106}
+
+Episode step 4900, time diff 2.659924268722534, total time diff 642.9224684238434)
+step: 4900 @ online episode: {'avg_reward': 1.952408927679062, 'max_reward': 2.900000071525574, 'reward_variance': 0.3004237122833729, 'coverage': 145.25, 'intra_slate_diversity': 0.6329678148031235, 'is_click_rate': 0.6893880367279053, 'is_like_rate': 0.643684920668602, 'is_star_rate': 0.6193359583616257} @ training: {'loss': 0.04572264142334461, 'TB_loss': 0.04572264142334461}
+
+Episode step 4920, time diff 2.408245086669922, total time diff 645.5823926925659)
+step: 4920 @ online episode: {'avg_reward': 1.959895920753479, 'max_reward': 2.900000071525574, 'reward_variance': 0.2768806889653206, 'coverage': 145.85, 'intra_slate_diversity': 0.6316976130008698, 'is_click_rate': 0.6871745020151139, 'is_like_rate': 0.6584635645151138, 'is_star_rate': 0.6142578333616256} @ training: {'loss': 0.039998733438551426, 'TB_loss': 0.039998733438551426}
+
+Episode step 4940, time diff 2.437087059020996, total time diff 647.9906377792358)
+step: 4940 @ online episode: {'avg_reward': 2.0630859971046447, 'max_reward': 2.958333373069763, 'reward_variance': 0.2763543017208576, 'coverage': 112.5, 'intra_slate_diversity': 0.6195299237966537, 'is_click_rate': 0.7197265803813935, 'is_like_rate': 0.6804036676883698, 'is_star_rate': 0.6629557520151138} @ training: {'loss': 0.027763616014271974, 'TB_loss': 0.027763616014271974}
+
+Episode step 4960, time diff 2.5955042839050293, total time diff 650.4277248382568)
+step: 4960 @ online episode: {'avg_reward': 2.0533204197883608, 'max_reward': 2.950000047683716, 'reward_variance': 0.2674738228321075, 'coverage': 113.25, 'intra_slate_diversity': 0.6206809282302856, 'is_click_rate': 0.7274739772081376, 'is_like_rate': 0.6788411676883698, 'is_star_rate': 0.6470052272081375} @ training: {'loss': 0.026137605402618648, 'TB_loss': 0.026137605402618648}
+
+Episode step 4980, time diff 3.0278091430664062, total time diff 653.0232291221619)
+step: 4980 @ online episode: {'avg_reward': 2.0142578721046447, 'max_reward': 2.9416667103767393, 'reward_variance': 0.3064939439296722, 'coverage': 115.85, 'intra_slate_diversity': 0.6226166799664498, 'is_click_rate': 0.7076172053813934, 'is_like_rate': 0.674414086341858, 'is_star_rate': 0.6322265803813935} @ training: {'loss': 0.029352269787341356, 'TB_loss': 0.029352269787341356}
+
