@@ -260,10 +260,11 @@ class TeacherStudent_TB(BaseOnlinePolicy):
                     feed_dict['new_reward'].max().item())
             reward_with_smooth = feed_dict['new_reward'] + self.gfn_reward_smooth
             reward_with_smooth = torch.clamp(reward_with_smooth, min=1e-8)
-            backward_part = torch.log(reward_with_smooth).view(-1)
+            # Following adaptive-teacher: use beta_teacher to scale the reward in backward part
+            backward_part = torch.log(reward_with_smooth).view(-1) * self.beta_teacher
         else:
             backward_part = torch.log(out_dict['reward'] + self.gfn_reward_smooth).view(-1)
-        per_sample_TB_loss = (forward_part - backward_part).pow(2)
+        per_sample_TB_loss = forward_part - backward_part
         # (B, )
         TB_loss = torch.mean((forward_part - backward_part).pow(2))
         # (B, )

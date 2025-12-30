@@ -11,8 +11,8 @@ import utils
 from model.agent.reward_func import *
 
 def get_teacher_reward(
-    discrepancies: Union[List[float], List[torch.Tensor], torch.Tensor],
-    reward: Union[List[Tuple], torch.Tensor],
+    discrepancies: torch.Tensor,
+    reward: torch.Tensor,
     log: bool = True,
     C: float = 19.0,
     alpha: float = 1.0,
@@ -21,8 +21,8 @@ def get_teacher_reward(
     Compute teacher reward for GFN4Rec based on student discrepancies.
 
     Args:
-        discrepancies: Student losses - can be List[float], List[torch.Tensor], or torch.Tensor of shape (B,)
-        reward: Environment rewards - can be List[Tuple] or torch.Tensor of shape (B,)
+        discrepancies: Student per-sample TB discrepancies (forward_part - backward_part, not squared), shape (B,)
+        reward: Environment rewards, shape (B,)
         log: Whether to take log of the adjusted reward.
         C: Scaling factor for positive student discrepancy.
         alpha: Exponent for reward weighting.
@@ -30,29 +30,24 @@ def get_teacher_reward(
     Returns:
         Teacher rewards as torch.Tensor of shape (B,)
     """
-    teacher_rewards = []
-
-    if isinstance(discrepancies[0], torch.Tensor):
-        # Tensor case
-        for _d, _tup in zip(discrepancies, reward): # discrepancies include all the trajectories of sampling
-            _d = _d.clone().detach()
-            _r = torch.ones_like(_d) # _r is the terminal reward of env
-            _r += _tup  # add the terminal reward of env like : [1,1,1,...,1+r(T)]
-            _a_r = _d * (1.0 + torch.where(_d > 0, torch.tensor(C, device=_d.device), 0.0)) #huge the student discrepancies (1+C)
-            # Optionally take log and apply reward exponent
-            if log:
-                teacher_rewards.append((1.0 + 1e-3 + _a_r).log() * (_r ** alpha))
-            else:
-                teacher_rewards.append(_a_r * (_r ** alpha))
-        teacher_rewards = torch.stack(teacher_rewards)
+    # Clone and detach to avoid gradient issues
+    _d = discrepancies.clone().detach()
+    _r = reward.clone().detach()
+    
+    # Compute adjusted reward: amplify positive discrepancies
+    # Following adaptive-teacher: _d^2 * (1 + C * 1[_d > 0])
+    # Note: discrepancies are raw per-sample TB discrepancies (forward_part - backward_part, not squared)
+    _a_r = (_d ** 2) * (1.0 + torch.where(_d > 0, torch.tensor(C, device=_d.device, dtype=_d.dtype), torch.tensor(0.0, device=_d.device, dtype=_d.dtype)))
+    
+    # Apply log and reward weighting
+    # In adaptive-teacher: _r is ones with terminal reward at last position, so _r^alpha
+    # In our case: we only have terminal reward, so use (1 + reward)^alpha
+    if log:
+        teacher_reward = (1.0 + 1e-3 + _a_r).log() * ((1.0 + _r) ** alpha)
     else:
-        # float case
-        maybe_log = lambda x: math.log(1.0 + 1e-3 + x) if log else x
-        for _d, _tup in zip(discrepancies, reward):
-            adj = (_d ** 2) * (1.0 + (C if _d > 0 else 0.0))
-            teacher_rewards.append(maybe_log(adj) * (_tup ** alpha))
-
-    return teacher_rewards
+        teacher_reward = _a_r * ((1.0 + _r) ** alpha)
+    
+    return teacher_reward
 
 class TeacherStudentOnlineAgent():
     @staticmethod
@@ -176,10 +171,14 @@ class TeacherStudentOnlineAgent():
             # online episode step
             do_buffer_update = True
             do_explore = True
-            if i % 2 == 0: # student
+            # Following adaptive-teacher: alternate between student and teacher sampling
+            # Teacher samples high-loss regions to guide student learning
+            # Note: adaptive-teacher uses (i // 2) % 2 == 0 for student, but we use i % 2 == 0
+            # This gives more frequent alternation which may be better for online learning
+            if i % 2 == 0:  # student sampling (on-policy)
                 observation = self.run_episode_step(i, self.exploration_scheduler.value(i), observation, 
                                                     do_buffer_update, do_explore, False)       
-            else: # teacher
+            else:  # teacher sampling (off-policy, explores high-loss regions)
                 observation = self.run_episode_step(i, self.exploration_scheduler.value(i), observation, 
                                                     do_buffer_update, do_explore, True)                
             # training step
